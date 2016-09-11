@@ -75,54 +75,135 @@ class API extends \Piwik\Plugin\API
             $tmp[ $key[1]."h" ] = $valueByTime['avg_speed'];
         }
         $graphData = $tmp;
-//        echo "<pre>";
-//        var_dump($graphData);
-//        echo "</pre>";
-//		$xAxis = array(
-//			'0h', '1h', '2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h',
-//			'12h', '13h', '14h', '15h', '16h', '17h', '18h', '19h', '20h', '21h', '22h', '23h',
-//		);
-//
-//		$temperatureValues = array_slice(range(50, 90), 0, count($xAxis));
-//		if (!self::$disableRandomness) {
-//			shuffle($temperatureValues);
-//		}
-//
-//		$temperatures = array();
-//		foreach ($xAxis as $i => $xAxisLabel) {
-//			$temperatures[$xAxisLabel] = $temperatureValues[$i];
-//		}
-//		echo "<pre>";
-//		var_dump($graphData, $temperatures);
-//		echo "</pre>";
+
 		return DataTable::makeFromIndexedArray($graphData);
 	}
 
 	public function buildDataHttpCodeGraph()
 	{
-		$columns = array('request_count_200','request_count_204','request_count_206');
+		$columns = 'request_count_200,request_count_204,request_count_206';
 
 		$idSite = Common::getRequestVar('idSite', 1);
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
 
+        $date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
 			'name'      => $nameCdn,
-			'date'      => date("Y-m-d H:i:s"),
-			'period'    => '1 minute',
-			'unit'      => 'minute', // range 1 minute
+			'date'      => "$date_param",
+			'period'    => 'range',
+			'unit'      => 'day', // range 1 minute
 			'type'      => $columns,
 		);
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
+        $dataCustomer = json_decode($dataCustomer, true);
 
-		$dataCustomer = array(
-			'request_count_200' => 127894,
-			'request_count_204' => 29456,
-			'request_count_206' => 39344,
+        $graphData = array();
+        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+        {
+            foreach ( $dataCustomer['data'] as $valueOfCdn )
+            {
+                // Name of Cdn: $valueOfCdn['name']
+                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+                {
+                    // Type request: valueOfTypeRequest['type']
+                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+                    {
+                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+                    }
+                }
+            }
+        }
+        ksort($graphData);
+
+//		$dataCustomer1 = array(
+//			'request_count_200' => 127894,
+//			'request_count_204' => 29456,
+//			'request_count_206' => 39344,
+//		);
+
+		return DataTable::makeFromIndexedArray(current($graphData));
+	}
+
+	public function buildDataIspGraph()
+	{
+		$columns = 'isp_request_count_200_mobiphone,isp_request_count_200_vinaphone,isp_request_count_200_fpt,isp_request_count_200_viettel,isp_request_count_200_vnpt';
+
+		$idSite = Common::getRequestVar('idSite', 1);
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getName();
+
+        $date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => "$date_param",
+			'period'    => 'range',
+			'unit'      => 'day', // range 1 minute
+			'type'      => $columns,
 		);
 
-		return DataTable::makeFromIndexedArray($dataCustomer);
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+        $dataCustomer = json_decode($dataCustomer, true);
+
+        $graphData = array();
+        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+        {
+            foreach ( $dataCustomer['data'] as $valueOfCdn )
+            {
+                // Name of Cdn: $valueOfCdn['name']
+                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+                {
+                    // Type request: valueOfTypeRequest['type']
+                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+                    {
+                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+                    }
+                }
+            }
+        }
+
+		return DataTable::makeFromIndexedArray(current($graphData));
+	}
+
+	public function buildDataCountryGraph()
+	{
+		$columns = 'country_request_count_200_VN,country_request_count_200_US,country_request_count_200_CN';
+
+		$idSite = Common::getRequestVar('idSite', 1);
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getName();
+
+        $date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => "$date_param",
+			'period'    => 'range',
+			'unit'      => 'day', // range 1 minute
+			'type'      => $columns,
+		);
+
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+        $dataCustomer = json_decode($dataCustomer, true);
+
+        $graphData = array();
+        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+        {
+            foreach ( $dataCustomer['data'] as $valueOfCdn )
+            {
+                // Name of Cdn: $valueOfCdn['name']
+                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+                {
+                    // Type request: valueOfTypeRequest['type']
+                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+                    {
+                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+                    }
+                }
+            }
+        }
+
+		return DataTable::makeFromIndexedArray(current($graphData));
 	}
 
 	public function getEvolutionOverview($idSite, $date, $period, $columns = false)
@@ -136,7 +217,9 @@ class API extends \Piwik\Plugin\API
 		if (!$columns) {
 			$columns = Common::getRequestVar('columns', false);
 		}
-
+        if ( is_array($columns) ) {
+            $columns = implode(",",$columns);
+        }
 		$params = array(
 			'name'      => $nameCdn,
 			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
