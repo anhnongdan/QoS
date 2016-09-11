@@ -1,0 +1,16 @@
+<h2 piwik-enriched-headline data-graph-id="QoS.getIndexGraph">{{ 'QoS_LogRequests'|translate }}</h2>
+
+<h3>{{ 'QoS_code2xx'|translate }}</h3><br>
+{{ graphErrorCode200|raw }}
+
+<h3>{{ 'QoS_code3xx'|translate }}</h3><br>
+{{ graphErrorCode300|raw }}
+
+<h3>{{ 'QoS_code4xx'|translate }}</h3><br>
+{{ graphErrorCode400|raw }}
+
+<h3>{{ 'QoS_code5xx'|translate }}</h3><br>
+{{ graphErrorCode500|raw }}
+
+{#<h2 class="qosReportTitle">{{ 'General_Report'|translate }}</h2>#}
+{#{% include "@QoS/sparklines.twig" %}#}
