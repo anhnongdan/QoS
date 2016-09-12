@@ -200,6 +200,88 @@ class API extends \Piwik\Plugin\API
 		return DataTable::makeFromIndexedArray(current($graphData));
 	}
 
+	public function overViewSppedGraph($idSite, $metric)
+	{
+	    if(!$idSite) {
+            $idSite = Common::getRequestVar('idSite', 1);
+        }
+
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getName();
+
+		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => "$date_param",
+			'period'    => 'range',
+			'unit'      => 'minute', // range 1 minute
+			'type'      => $metric ? $metric : 'avg_speed',
+		);
+
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+		$dataCustomer = json_decode($dataCustomer, true);
+
+		$graphData = array();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+					}
+				}
+			}
+		}
+
+		return current(current($graphData));
+	}
+
+	public function overViewCacheHitGraph($idSite, $metric)
+	{
+	    if(!$idSite) {
+            $idSite = Common::getRequestVar('idSite', 1);
+        }
+
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getName();
+
+		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => "$date_param",
+			'period'    => 'range',
+			'unit'      => 'minute', // range 1 minute
+			'type'      => $metric ? $metric : 'isp_request_count_200_viettel',
+		);
+
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+		$dataCustomer = json_decode($dataCustomer, true);
+
+		$graphData = array();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+					}
+				}
+			}
+		}
+
+		return current(current($graphData));
+	}
+
 	public function getEvolutionOverview($idSite, $date, $period, $columns = false)
 	{
 		$cdnObj     = new Site($idSite);

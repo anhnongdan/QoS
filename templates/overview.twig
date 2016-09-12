@@ -3,8 +3,11 @@
         <div class="col-md-12">
         {{ graphOverviewBw|raw }}
         </div>
-        <div class="col-md-12">
-        {{ graphErrorCode300|raw }}
+        <div class="col-md-12 box-overview">
+            <span>- Cache Hit</span>
+            <div>
+                <h2>{{ graphCacheHit|raw }}</h2>
+            </div>
         </div>
         <div class="col-md-12">
         {{ graphIsp|raw }}
@@ -12,10 +15,10 @@
     </div>
 
     <div class="col-md-6">
-        <div class="col-md-12">
-            <span>- Spped</span>
-            <div class="box-overview">
-                <h2>456</h2>
+        <div class="col-md-12 box-overview">
+            <span>- Speed</span>
+            <div>
+                <h2>{{ graphSpeed|raw }}</h2>
             </div>
         </div>
         <div class="col-md-12">
