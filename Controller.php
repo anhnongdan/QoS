@@ -22,11 +22,10 @@ class Controller extends \Piwik\Plugin\Controller
 		$view->graphOverviewBw      = $this->overViewBandwidthGraph( 'graphVerticalBar', array('avg_speed') );
 		$view->overviewCacheHit     = 76;
 
-		$view->graphIsp             = $this->overViewIspGraph('graphPie', array('mobiphone,vinaphone,fpt,viettel,vnpt'), array('mobiphone,vinaphone,fpt,viettel,vnpt'));
-		$view->graphCountry         = $this->overViewCountryGraph('graphPie', array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'), array('request_count_301'));
+		$view->graphIsp             = $this->overViewIspGraph('graphPie', array('isp_request_count_200_mobiphone,isp_request_count_200_vinaphone,isp_request_count_200_fpt,isp_request_count_200_viettel,isp_request_count_200_vnpt'), array('isp_request_count_200_mobiphone,isp_request_count_200_vinaphone,isp_request_count_200_fpt,isp_request_count_200_viettel,isp_request_count_200_vnpt'));
+		$view->graphCountry         = $this->overViewCountryGraph('graphPie', array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'), array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'));
 		$view->graphErrorCode300    = $this->getEvolutionGraph(array('request_count_400','request_count_404'), array('request_count_400'));
 		$view->graphErrorCode500    = $this->getEvolutionGraph(array('request_count_500','request_count_502','request_count_503','request_count_504'), array('request_count_500'));
-		$this->setSparklinesAndNumbers($view);
 
 		return $view->render();
 	}
@@ -69,11 +68,11 @@ class Controller extends \Piwik\Plugin\Controller
 		$view = new View('@QoS/isp');
 
 		// mobiphone, vinaphone, fpt, viettel, vnpt
-		$view->graphIspVnpt         = $this->getEvolutionGraph(array('vnpt'), array('vnpt'));
-		$view->graphIspVinaphone    = $this->getEvolutionGraph(array('vinaphone'), array('vinaphone'));
-		$view->graphIspViettel      = $this->getEvolutionGraph(array('fpt'), array('fpt'));
-		$view->graphIspFpt          = $this->getEvolutionGraph(array('viettel'), array('viettel'));
-		$view->graphIspMobifone     = $this->getEvolutionGraph(array('vnpt'), array('vnpt'));
+		$view->graphIspVnpt         = $this->getEvolutionGraph(array('isp_request_count_200_vnpt'), array('isp_request_count_200_vnpt'));
+		$view->graphIspVinaphone    = $this->getEvolutionGraph(array('isp_request_count_200_vinaphone'), array('isp_request_count_200_vinaphone'));
+		$view->graphIspViettel      = $this->getEvolutionGraph(array('isp_request_count_200_fpt'), array('isp_request_count_200_fpt'));
+		$view->graphIspFpt          = $this->getEvolutionGraph(array('isp_request_count_200_viettel'), array('isp_request_count_200_viettel'));
+		$view->graphIspMobifone     = $this->getEvolutionGraph(array('isp_request_count_200_vnpt'), array('isp_request_count_200_vnpt'));
 
 		return $view->render();
 	}
@@ -82,12 +81,12 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/country');
 
-		$view->graphCountry         = $this->getEvolutionGraph(array('country_request_count_200_VN'), array('country_request_count_200_VN'));
+		$view->graphCountry         = $this->getEvolutionGraph(array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'), array('country_request_count_200_VN'));
 
 		return $view->render();
 	}
 
-	public function overViewBandwidthGraph( $type = 'graphVerticalBar', $metrics = array())
+	public function overViewBandwidthGraph($type = 'graphVerticalBar', $metrics = array())
 	{
 		$view = ViewDataTableFactory::build( $type, 'QoS.buildDataBwGraph', 'QoS.overViewBandwidthGraph', false );
 
@@ -102,7 +101,7 @@ class Controller extends \Piwik\Plugin\Controller
 		return $view->render();
 	}
 
-	public function overViewHttpCodeGraph( $type = 'graphPie', $metrics = array())
+	public function overViewHttpCodeGraph($type = 'graphPie', $metrics = array())
 	{
 		$view = ViewDataTableFactory::build( $type, 'QoS.buildDataHttpCodeGraph', 'QoS.overViewHttpCodeGraph', false );
 
@@ -115,7 +114,7 @@ class Controller extends \Piwik\Plugin\Controller
 		return $view->render();
 	}
 
-	public function overViewIspGraph( $type = 'graphPie', $metrics = array())
+	public function overViewIspGraph($type = 'graphPie', $metrics = array())
 	{
 		$view = ViewDataTableFactory::build( $type, 'QoS.buildDataIspGraph', 'QoS.overViewIspGraph', false );
 
@@ -128,7 +127,7 @@ class Controller extends \Piwik\Plugin\Controller
 		return $view->render();
 	}
 
-	public function overViewCountryGraph( $type = 'graphPie', $metrics = array())
+	public function overViewCountryGraph($type = 'graphPie', $metrics = array())
 	{
 		$view = ViewDataTableFactory::build( $type, 'QoS.buildDataCountryGraph', 'QoS.overViewCountryGraph', false );
 
@@ -166,61 +165,5 @@ class Controller extends \Piwik\Plugin\Controller
 		}
 
 		return $this->renderView($view);
-	}
-
-//	public function overViewCountryGraph(array $columns = array(), array $defaultColumns = array())
-//	{
-//		if (empty($columns))
-//		{
-//			$columns = Common::getRequestVar('columns', false);
-//			if (false !== $columns)
-//			{
-//				$columns = Piwik::getArrayFromApiParameter($columns);
-//			}
-//		}
-//
-//		$selectableColumns = $columns;
-//
-//		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, 'Documentation', 'QoS.getEvolutionOverview');
-//
-//		$view->config->enable_sort          = false;
-//		$view->config->max_graph_elements   = 30;
-//		$view->requestConfig->filter_sort_column = 'label';
-//		$view->requestConfig->filter_sort_order  = 'asc';
-//
-//		if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-//			$view->config->columns_to_display = $defaultColumns;
-//		}
-//
-//		return $this->renderView($view);
-//	}
-
-//	public function httpCode()
-//	{
-//		$view = new View('@QoS/httpcode');
-//
-//		$view->dataTableCounterRequest = $this->renderReport(__FUNCTION__);
-//
-//		$view->config->translations['value'] = 'QoS_Count';
-//		$view->config->translations['label'] = 'QoS_Time';
-//		$view->requestConfig->filter_sort_column    = 'label';
-//		$view->requestConfig->filter_sort_order     = 'asc';
-//		$view->requestConfig->filter_limit = 20;
-//		$view->config->columns_to_display  = array('label', 'value');
-//		$view->config->show_exclude_low_population = false;
-//		$view->config->show_table_all_columns = false;
-//		$view->config->disable_row_evolution  = true;
-//		$view->config->max_graph_elements = 30;
-//		$view->config->metrics_documentation = array('value' => 'Documentation');
-//
-//		return $view->render();
-//	}
-
-	public function setSparklinesAndNumbers($view)
-	{
-		$view->urlSparklineAverageRq200 	= $this->getUrlSparkline('getEvolutionGraph', array('columns' => array('request_count_200')));
-		$view->urlSparkline2                = $this->getUrlSparkline('getEvolutionGraph', array('columns' => array('request_count_200', 'request_count_404', 'request_count_502')));
-
-		$view->nbAverage200     = 2000000000;
 	}
 }

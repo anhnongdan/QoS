@@ -1,0 +1,10 @@
+.box-overview {
+    text-align: center;
+    height: 200px;
+    margin: 50px;
+    background-color: #F1F0EB;
+    border-radius: 10px;
+    display: inline-block;
+    margin: 2em 0 1em 0;
+    padding: 3em;
+}

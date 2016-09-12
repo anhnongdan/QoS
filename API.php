@@ -61,20 +61,21 @@ class API extends \Piwik\Plugin\API
 					// Type request: valueOfTypeRequest['type']
 					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
 					{
-                        $bandwidthData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
+						$bandwidthData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
 					}
 				}
 			}
 		}
-		ksort($bandwidthData);
+//		ksort($bandwidthData);
 		$graphData = array_slice($bandwidthData, -24, 24, true);
-        $tmp = array();
-        foreach ( $graphData as $keyTime => $valueByTime )
-        {
-            $key = explode(" ", $keyTime);
-            $tmp[ $key[1]."h" ] = $valueByTime['avg_speed'];
-        }
-        $graphData = $tmp;
+		$tmp = array();
+		foreach ( $graphData as $keyTime => $valueByTime )
+		{
+//			$key = explode(" ", $keyTime);
+//			$tmp[ $key[1]."h" ] = $valueByTime['avg_speed'];
+            $tmp[ $keyTime."h" ] = $valueByTime['avg_speed'];
+		}
+		$graphData = $tmp;
 
 		return DataTable::makeFromIndexedArray($graphData);
 	}
@@ -87,7 +88,7 @@ class API extends \Piwik\Plugin\API
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
 
-        $date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
+		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
 			'name'      => $nameCdn,
 			'date'      => "$date_param",
@@ -97,31 +98,24 @@ class API extends \Piwik\Plugin\API
 		);
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
-        $dataCustomer = json_decode($dataCustomer, true);
+		$dataCustomer = json_decode($dataCustomer, true);
 
-        $graphData = array();
-        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-        {
-            foreach ( $dataCustomer['data'] as $valueOfCdn )
-            {
-                // Name of Cdn: $valueOfCdn['name']
-                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-                {
-                    // Type request: valueOfTypeRequest['type']
-                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-                    {
-                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
-                    }
-                }
-            }
-        }
-        ksort($graphData);
-
-//		$dataCustomer1 = array(
-//			'request_count_200' => 127894,
-//			'request_count_204' => 29456,
-//			'request_count_206' => 39344,
-//		);
+		$graphData = array();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+					}
+				}
+			}
+		}
 
 		return DataTable::makeFromIndexedArray(current($graphData));
 	}
@@ -134,7 +128,7 @@ class API extends \Piwik\Plugin\API
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
 
-        $date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
+		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
 			'name'      => $nameCdn,
 			'date'      => "$date_param",
@@ -144,24 +138,24 @@ class API extends \Piwik\Plugin\API
 		);
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
-        $dataCustomer = json_decode($dataCustomer, true);
+		$dataCustomer = json_decode($dataCustomer, true);
 
-        $graphData = array();
-        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-        {
-            foreach ( $dataCustomer['data'] as $valueOfCdn )
-            {
-                // Name of Cdn: $valueOfCdn['name']
-                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-                {
-                    // Type request: valueOfTypeRequest['type']
-                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-                    {
-                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
-                    }
-                }
-            }
-        }
+		$graphData = array();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+					}
+				}
+			}
+		}
 
 		return DataTable::makeFromIndexedArray(current($graphData));
 	}
@@ -174,7 +168,7 @@ class API extends \Piwik\Plugin\API
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
 
-        $date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
+		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
 			'name'      => $nameCdn,
 			'date'      => "$date_param",
@@ -184,24 +178,24 @@ class API extends \Piwik\Plugin\API
 		);
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
-        $dataCustomer = json_decode($dataCustomer, true);
+		$dataCustomer = json_decode($dataCustomer, true);
 
-        $graphData = array();
-        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-        {
-            foreach ( $dataCustomer['data'] as $valueOfCdn )
-            {
-                // Name of Cdn: $valueOfCdn['name']
-                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-                {
-                    // Type request: valueOfTypeRequest['type']
-                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-                    {
-                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
-                    }
-                }
-            }
-        }
+		$graphData = array();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+					}
+				}
+			}
+		}
 
 		return DataTable::makeFromIndexedArray(current($graphData));
 	}
@@ -217,9 +211,9 @@ class API extends \Piwik\Plugin\API
 		if (!$columns) {
 			$columns = Common::getRequestVar('columns', false);
 		}
-        if ( is_array($columns) ) {
-            $columns = implode(",",$columns);
-        }
+		if ( is_array($columns) ) {
+			$columns = implode(",",$columns);
+		}
 		$params = array(
 			'name'      => $nameCdn,
 			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
@@ -239,78 +233,6 @@ class API extends \Piwik\Plugin\API
 		 *      "2016-07-19" => array ( "request_count_200" => X, "request_count_500" => Y )
 		 * )
 		 */
-
-		$dataCustomer = json_decode($dataCustomer, true);
-		$graphData = array();
-
-		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-		{
-			foreach ( $dataCustomer['data'] as $valueOfCdn )
-			{
-				// Name of Cdn: $valueOfCdn['name']
-				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-				{
-					// Type request: valueOfTypeRequest['type']
-					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-					{
-						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
-					}
-				}
-			}
-		}
-		ksort($graphData);
-
-		return DataTable::makeFromIndexedArray($graphData);
-	}
-
-	public function httpCode($idSite, $date, $period, $segment = false)
-	{
-		if ( !$idSite ) {
-			Common::getRequestVar('idSite', false);
-		}
-
-		if ( !$date ) {
-			Common::getRequestVar('date', false);
-		}
-
-		if ( !$period ) {
-			Common::getRequestVar('period', 'day');
-		}
-echo "<pre>";
-	var_dump($date, $period);
-echo "</pre>";
-
-//		list($strLastDate, $lastPeriod) = Range::getLastDate($date, $period);
-//
-//echo "<pre>";
-//    var_dump($strLastDate, $lastPeriod);
-//echo "</pre>";
-//
-//echo "<pre>";
-//    var_dump(Range::getLastDate($date));
-//echo "</pre>";
-//
-//echo "<pre>";
-//    var_dump(Date::factory($date)->getDatetime(), Date::factory($date)->getDateStartUTC());
-//echo "</pre>";
-
-		$cdnObj     = new Site($idSite);
-		$nameCdn    = $cdnObj->getName();
-
-//		$date = '2016-07-02,2016-08-31';
-
-		$typePeriod = $this->countStepPeriod($period);
-		$dates = explode(",", $date);
-
-		$params = array(
-			'name'      => $nameCdn,
-			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
-			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
-			'unit'      => $period,
-			'type'      => 'request_count_200'
-		);
-
-		$dataCustomer = $this->apiGetCdnDataMk($params);
 
 		$dataCustomer = json_decode($dataCustomer, true);
 		$graphData = array();
