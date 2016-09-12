@@ -19,9 +19,7 @@ class Controller extends \Piwik\Plugin\Controller
 		$this->setPeriodVariablesView($view);
 
 		$view->graphHttpCode        = $this->overViewHttpCodeGraph( 'graphPie', array('request_count_200','request_count_204','request_count_206') );
-		$view->graphOverviewBw      = $this->overViewBandwidthGraph( 'graphVerticalBar', array('avg_speed') );
-		$view->overviewCacheHit     = 76;
-
+		$view->graphOverviewBw      = $this->overViewBandwidthGraph( 'graphVerticalBar', array('traffic_ps') );
 		$view->graphIsp             = $this->overViewIspGraph('graphPie', array('isp_request_count_200_mobiphone,isp_request_count_200_vinaphone,isp_request_count_200_fpt,isp_request_count_200_viettel,isp_request_count_200_vnpt'), array('isp_request_count_200_mobiphone,isp_request_count_200_vinaphone,isp_request_count_200_fpt,isp_request_count_200_viettel,isp_request_count_200_vnpt'));
 		$view->graphCountry         = $this->overViewCountryGraph('graphPie', array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'), array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'));
 		$view->graphCacheHit        = API::getInstance()->overViewCacheHitGraph($this->idSite, $metric = 'isp_request_count_200_viettel');
@@ -34,12 +32,16 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/bandwidth');
 
+        $view->graphBandwidth   = $this->getEvolutionGraph(array('traffic_ps'), array('traffic_ps'));
+
 		return $view->render();
 	}
 
 	public function userSpeed()
 	{
 		$view = new View('@QoS/userSpeed');
+
+        $view->graphUserSpeed   = $this->getEvolutionGraph(array('avg_speed'), array('avg_speed'));
 
 		return $view->render();
 	}
@@ -48,6 +50,12 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/cacheHit');
 
+        $view->graphCacheHitVnpt         = $this->getEvolutionGraph(array('isp_request_count_200_vnpt','isp_request_count_206_vnpt'), array('isp_request_count_200_vnpt','isp_request_count_206_vnpt'));
+        $view->graphCacheHitVinaphone    = $this->getEvolutionGraph(array('isp_request_count_200_vinaphone','isp_request_count_206_vinaphone'), array('isp_request_count_200_vinaphone','isp_request_count_206_vinaphone'));
+        $view->graphCacheHitViettel      = $this->getEvolutionGraph(array('isp_request_count_200_fpt','isp_request_count_206_fpt'), array('isp_request_count_200_fpt','isp_request_count_206_fpt'));
+        $view->graphCacheHitFpt          = $this->getEvolutionGraph(array('isp_request_count_200_viettel','isp_request_count_206_viettel'), array('isp_request_count_200_viettel','isp_request_count_206_viettel'));
+        $view->graphCacheHitMobifone     = $this->getEvolutionGraph(array('isp_request_count_200_vnpt','isp_request_count_206_vnpt'), array('isp_request_count_200_vnpt','isp_request_count_206_vnpt'));
+
 		return $view->render();
 	}
 
@@ -55,10 +63,10 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/httpcode');
 
-		$view->graphErrorCode200    = $this->getEvolutionGraph(array('request_count_200','request_count_204','request_count_206'), array('request_count_200'));
-		$view->graphErrorCode300    = $this->getEvolutionGraph(array('request_count_301','request_count_302','request_count_304'), array('request_count_301'));
-		$view->graphErrorCode400    = $this->getEvolutionGraph(array('request_count_400','request_count_404'), array('request_count_400'));
-		$view->graphErrorCode500    = $this->getEvolutionGraph(array('request_count_500','request_count_502','request_count_503','request_count_504'), array('request_count_500'));
+		$view->graphErrorCode200    = $this->getEvolutionGraph(array('request_count_200','request_count_204','request_count_206'), array('request_count_200'), 'getOverViewGraph');
+		$view->graphErrorCode300    = $this->getEvolutionGraph(array('request_count_301','request_count_302','request_count_304'), array('request_count_301'), 'getOverViewGraph');
+		$view->graphErrorCode400    = $this->getEvolutionGraph(array('request_count_400','request_count_404'), array('request_count_400'), 'getOverViewGraph');
+		$view->graphErrorCode500    = $this->getEvolutionGraph(array('request_count_500','request_count_502','request_count_503','request_count_504'), array('request_count_500'), 'getOverViewGraph');
 
 		return $view->render();
 	}
@@ -140,21 +148,24 @@ class Controller extends \Piwik\Plugin\Controller
 		return $view->render();
 	}
 
-	public function getEvolutionGraph(array $columns = array(), array $defaultColumns = array())
+    public function getOverViewGraph()
+    {
+        return $this->getEvolutionGraph(array(), array(), __FUNCTION__);
+    }
+
+	public function getEvolutionGraph(array $columns = array(), array $defaultColumns = array(), $callingAction = __FUNCTION__)
 	{
-		if (empty($columns))
-		{
-			$columns = Common::getRequestVar('columns', false);
-			if (false !== $columns)
-			{
-				$columns = Piwik::getArrayFromApiParameter($columns);
-			}
-		}
+        if (empty($columns)) {
+            $columns = Common::getRequestVar('columns', false);
+            if (false !== $columns) {
+                $columns = Piwik::getArrayFromApiParameter($columns);
+            }
+        }
 
 		$selectableColumns = $columns;
 
-		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, 'Documentation', 'QoS.getEvolutionOverview');
-
+//		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getEvolutionOverview');
+        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '');
 		$view->config->enable_sort          = false;
 		$view->config->max_graph_elements   = 30;
 		$view->requestConfig->filter_sort_column = 'label';
@@ -166,4 +177,10 @@ class Controller extends \Piwik\Plugin\Controller
 
 		return $this->renderView($view);
 	}
+
+	public function exampleMethod()
+    {
+        $this->renderReport('exampleEvolution');
+
+    }
 }

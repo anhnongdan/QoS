@@ -289,7 +289,9 @@ class API extends \Piwik\Plugin\API
 
 		$typePeriod = $this->countStepPeriod($period);
 		$dates      = explode(",", $date);
-
+        echo "<pre>";
+            var_dump($columns);
+        echo "</pre>";
 		if (!$columns) {
 			$columns = Common::getRequestVar('columns', false);
 		}
@@ -338,6 +340,13 @@ class API extends \Piwik\Plugin\API
 
 		return DataTable::makeFromIndexedArray($graphData);
 	}
+
+	public function exampleEvolution($idSite, $date, $period, $columns, $metrics)
+    {
+        echo "<pre>";
+            var_dump($idSite, $date, $period, $columns, $metrics);
+        echo "</pre>";
+    }
 
 	private function apiGetCdnDataMk( $data )
 	{
