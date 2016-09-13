@@ -1,17 +1,15 @@
 <?php
+/**
+ * Piwik - free/libre analytics platform
+ *
+ * @link http://piwik.org
+ * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
+ */
 
 namespace Piwik\Plugins\QoS;
 
 use Piwik\Common;
 use Piwik\DataTable;
-use Piwik\Date;
-use Piwik\Period\Range;
-use Piwik\Period;
-use Piwik\Archive;
-use Piwik\Metrics\Formatter;
-use Piwik\Piwik;
-use Piwik\Plugin\Report;
-use Piwik\SettingsPiwik;
 use Piwik\Site;
 
 /**
@@ -24,11 +22,34 @@ use Piwik\Site;
  */
 class API extends \Piwik\Plugin\API
 {
+    private $config;
+    private $metric2xx;
 
-	public static $disableRandomness = false;
+    function __construct()
+    {
+        $this->setMetric2xx();
+        $this->setConfig();
+    }
 
+    public function getMetric2xx() {
+        return $this->metric2xx;
+    }
 
-	public function buildDataBwGraph()
+    public function getConfig() {
+        return $this->config;
+    }
+
+    private function setMetric2xx()
+    {
+        $metric2xx = new Settings('QoS');
+        $this->metric2xx = $metric2xx->metric2xx->getValue();
+    }
+
+    private function setConfig()
+    {
+        // code later
+    }
+    public function buildDataBwGraph()
 	{
 		$columns = array('avg_speed');
 
@@ -289,15 +310,14 @@ class API extends \Piwik\Plugin\API
 
 		$typePeriod = $this->countStepPeriod($period);
 		$dates      = explode(",", $date);
-        echo "<pre>";
-            var_dump($columns);
-        echo "</pre>";
+
 		if (!$columns) {
 			$columns = Common::getRequestVar('columns', false);
 		}
 		if ( is_array($columns) ) {
 			$columns = implode(",",$columns);
 		}
+
 		$params = array(
 			'name'      => $nameCdn,
 			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
@@ -340,13 +360,6 @@ class API extends \Piwik\Plugin\API
 
 		return DataTable::makeFromIndexedArray($graphData);
 	}
-
-	public function exampleEvolution($idSite, $date, $period, $columns, $metrics)
-    {
-        echo "<pre>";
-            var_dump($idSite, $date, $period, $columns, $metrics);
-        echo "</pre>";
-    }
 
 	private function apiGetCdnDataMk( $data )
 	{

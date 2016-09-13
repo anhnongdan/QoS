@@ -1,4 +1,10 @@
 <?php
+/**
+ * Piwik - free/libre analytics platform
+ *
+ * @link http://piwik.org
+ * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
+ */
 
 namespace Piwik\Plugins\QoS;
 
@@ -22,7 +28,6 @@ class Menu extends \Piwik\Plugin\Menu
 		$this->addSubMenu($menu, Piwik::translate('QoS_HttpCode'),  'httpCode',     5);
 		$this->addSubMenu($menu, Piwik::translate('QoS_ISP'),       'isp',          6);
 		$this->addSubMenu($menu, Piwik::translate('QoS_Country'),   'country',      7);
-		$this->addSubMenu($menu, Piwik::translate('QoS_Example'),   'exampleMethod',      8);
 	}
 
 	private function addSubMenu(MenuReporting $menu, $subMenu, $action, $order)
