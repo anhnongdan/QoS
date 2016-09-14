@@ -47,9 +47,14 @@ class Settings extends \Piwik\Plugin\Settings
         $this->httpCode        = new SystemSetting('httpCode', 'Metrics Http Code');
         $this->httpCode->type  = static::TYPE_ARRAY;
         $this->httpCode->uiControlType = static::CONTROL_MULTI_SELECT;
-        $this->httpCode->availableValues  = array('request_count_200' => 'http code 200', 'request_count_204' => 'http code 200', 'request_count_206' => 'http code 206');
+        $this->httpCode->availableValues  = array('request_count_200' => 'Http code 200', 'request_count_204' => 'Http code 200', 'request_count_206' => 'Http code 206');
         $this->httpCode->description   = 'The value will be only displayed in the following http code 2xx';
-        $this->httpCode->defaultValue  = array('request_count_200','request_count_204','request_count_206');
+        $this->httpCode->defaultValue  = array(
+            'request_count_200','request_count_204','request_count_206',
+            'request_count_301','request_count_302','request_count_304',
+            'request_count_400','request_count_404',
+            'request_count_500','request_count_502','request_count_503','request_count_504'
+        );
         $this->httpCode->readableByCurrentUser = true;
 
         $this->addSetting($this->httpCode);

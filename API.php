@@ -12,6 +12,9 @@ use Piwik\Common;
 use Piwik\DataTable;
 use Piwik\Site;
 
+use Piwik\API\Request;
+
+
 /**
  * ExampleUI API is also an example API useful if you are developing a Piwik plugin.
  *
@@ -38,7 +41,7 @@ class API extends \Piwik\Plugin\API
     }
 
     public function getHttpCode() {
-        return $this->metric2xx;
+        return $this->httpCode;
     }
 
     public function getConfig() {
@@ -322,7 +325,13 @@ class API extends \Piwik\Plugin\API
 
 		if (!$columns) {
 			$columns = Common::getRequestVar('columns', false);
+            if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
+                $columns = $this->httpCode;
+            }
 		}
+echo "<pre>";
+    var_dump($columns);
+echo "</pre>";
 		if ( is_array($columns) ) {
 			$columns = implode(",",$columns);
 		}
@@ -370,13 +379,16 @@ class API extends \Piwik\Plugin\API
 		return DataTable::makeFromIndexedArray($graphData);
 	}
 
-    public function getDevelopmentAreaApi($idSite, $date, $period, $columns = false)
+    public function getDevelopmentAreaApi($idSite, $period, $date, $segment = false, $columns = false)
     {
         $cdnObj     = new Site($idSite);
         $nameCdn    = $cdnObj->getName();
 
         $typePeriod = $this->countStepPeriod($period);
         $dates      = explode(",", $date);
+        echo "<pre>";
+            var_dump($columns);
+        echo "</pre>";
 
         if (!$columns) {
             $columns = Common::getRequestVar('columns', false);
@@ -427,6 +439,11 @@ class API extends \Piwik\Plugin\API
         ksort($graphData);
 
         return DataTable::makeFromIndexedArray($graphData);
+    }
+
+    public function get($idSite, $period, $date, $segment = false, $columns = false)
+    {
+        return DataTable::makeFromSimpleArray(array());
     }
 
 	private function apiGetCdnDataMk( $data )

@@ -69,10 +69,10 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/httpcode');
 
-		$view->graphErrorCode200    = $this->getEvolutionGraph(array(), array('request_count_200','request_count_204','request_count_206'), 'getEvolutionOverview');
-		$view->graphErrorCode300    = $this->getEvolutionGraph(array(), array('request_count_301','request_count_302','request_count_304'), 'getEvolutionOverview');
-		$view->graphErrorCode400    = $this->getEvolutionGraph(array(), array('request_count_400','request_count_404'), 'getEvolutionOverview');
-		$view->graphErrorCode500    = $this->getEvolutionGraph(array(), array('request_count_500','request_count_502','request_count_503','request_count_504'), 'getEvolutionOverview');
+		$view->graphErrorCode200    = $this->getEvolutionGraph(array('request_count_200','request_count_204','request_count_206'), array('request_count_200','request_count_204','request_count_206'));
+		$view->graphErrorCode300    = $this->getEvolutionGraph(array(), array('request_count_301','request_count_302','request_count_304'));
+		$view->graphErrorCode400    = $this->getEvolutionGraph(array(), array('request_count_400','request_count_404'));
+		$view->graphErrorCode500    = $this->getEvolutionGraph(array(), array('request_count_500','request_count_502','request_count_503','request_count_504'));
 
 		return $view->render();
 	}
@@ -123,12 +123,12 @@ class Controller extends \Piwik\Plugin\Controller
         $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.'.$apiMethod);
 
         $view->config->selectable_columns = $selectableColumns;
+        $view->config->columns_to_display = $defaultColumns;
         $view->config->enable_sort          = false;
         $view->config->max_graph_elements   = 30;
         $view->requestConfig->filter_sort_column = 'label';
         $view->requestConfig->filter_sort_order  = 'asc';
         $view->requestConfig->disable_generic_filters=true;
-        $view->config->columns_to_display = $defaultColumns;
 
 //        if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
 //            $view->config->columns_to_display = $defaultColumns;
@@ -196,7 +196,7 @@ class Controller extends \Piwik\Plugin\Controller
 		return $this->getEvolutionGraph(array(), array(), __FUNCTION__);
 	}
 
-	public function getEvolutionGraph(array $columns = array(), array $defaultColumns = array(), $apiMethod = __FUNCTION__)
+	public function getEvolutionGraph(array $columns = array(), array $defaultColumns = array())
 	{
         if (empty($columns)) {
             $columns = Common::getRequestVar('columns', false);
@@ -206,9 +206,13 @@ class Controller extends \Piwik\Plugin\Controller
         }
 
         $selectableColumns = $defaultColumns;
-
-        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.'.$apiMethod);
-
+        echo "<pre>";
+            var_dump("First", $selectableColumns);
+        echo "</pre>";
+        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getEvolutionOverview');
+        echo "<pre>";
+        var_dump("Second", $selectableColumns);
+        echo "</pre>";
         $view->config->selectable_columns   = $selectableColumns;
         $view->config->enable_sort          = false;
         $view->config->max_graph_elements   = 30;

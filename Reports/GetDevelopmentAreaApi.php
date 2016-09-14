@@ -10,7 +10,7 @@ namespace Piwik\Plugins\QoS\Reports;
 
 use Piwik\Piwik;
 
-class Get extends \Piwik\Plugin\Report
+class GetDevelopmentAreaApi extends \Piwik\Plugin\Report
 {
     protected function init()
     {
@@ -32,5 +32,4 @@ class Get extends \Piwik\Plugin\Report
 
         return $metrics;
     }
-
 }
