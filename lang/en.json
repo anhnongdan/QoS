@@ -17,6 +17,7 @@
     "code3xx"     : "3xx",
     "code4xx"     : "4xx",
     "code5xx"     : "5xx",
-    "The_percentage_of_http_code_2xx" : "The percentage of http code 2xx"
+    "The_percentage_of_http_code_2xx" : "The percentage of http code 2xx",
+    "QoS_Development" : "Development"
   }
 }
