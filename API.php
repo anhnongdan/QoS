@@ -36,28 +36,30 @@ class API extends \Piwik\Plugin\API
 
 	function __construct()
 	{
-		$this->setHttpCode();
-		$this->setConfig();
+        $this->setHttpCode();
+		$this->setCacheHit();
 	}
 
 	public function getHttpCode() {
-		return $this->httpCode;
-	}
-
-	public function getConfig() {
-		return $this->config;
-	}
+        return $this->httpCode;
+    }
 
 	private function setHttpCode()
+    {
+        $httpCode = new Settings('QoS');
+        $this->httpCode = $httpCode->httpCode->getValue();
+    }
+
+    public function getCacheHit() {
+        return $this->cachehit;
+    }
+
+    private function setCacheHit()
 	{
-		$httpCode = new Settings('QoS');
-		$this->httpCode = $httpCode->httpCode->getValue();
+		$cacheHitSetting = new Settings('cacheHit');
+		$this->cacheHit = $cacheHitSetting->cacheHit->getValue();
 	}
 
-	private function setConfig()
-	{
-		// code later
-	}
 	public function buildDataBwGraph()
 	{
 		$columns = array('avg_speed');
@@ -502,15 +504,8 @@ class API extends \Piwik\Plugin\API
             }
         }
         ksort($graphData);
-echo "<pre>";
-    var_dump($graphData);
-echo "</pre>";
-        return DataTable::makeFromIndexedArray($graphData);
-	}
 
-	public function get($idSite, $period, $date, $segment = false, $columns = false)
-	{
-		return DataTable::makeFromSimpleArray(array());
+        return DataTable::makeFromIndexedArray($graphData);
 	}
 
 	private function apiGetCdnDataMk( $data )

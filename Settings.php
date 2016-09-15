@@ -20,7 +20,10 @@ class Settings extends \Piwik\Plugin\Settings
 	public $qosSettings;
 
     /** @var httpCode */
-	public $httpCode;
+    public $httpCode;
+
+    /** @var cacheHit */
+	public $cacheHit;
 
 	protected function init()
 	{
@@ -28,6 +31,7 @@ class Settings extends \Piwik\Plugin\Settings
 
 		$this->createQoSSetting();
         $this->createHttpCodeSetting();
+        $this->createCacheHitSetting();
 	}
 
 	private function createQoSSetting()
@@ -58,5 +62,24 @@ class Settings extends \Piwik\Plugin\Settings
         $this->httpCode->readableByCurrentUser = true;
 
         $this->addSetting($this->httpCode);
+    }
+
+    private function createCacheHitSetting()
+    {
+        $this->cacheHit        = new SystemSetting('cacheHit', 'Metrics Cache Hit');
+        $this->cacheHit->type  = static::TYPE_ARRAY;
+        $this->cacheHit->uiControlType = static::CONTROL_MULTI_SELECT;
+        $this->cacheHit->availableValues  = array('request_count_200' => 'Http code 200', 'request_count_204' => 'Http code 200', 'request_count_206' => 'Http code 206');
+        $this->cacheHit->description   = 'The value will be only displayed in the following http code 2xx';
+        $this->cacheHit->defaultValue  = array(
+            'vnpt'          => array ('isp_request_count_200_vnpt','isp_request_count_206_vnpt'),
+            'vinaphone'     => array ('isp_request_count_200_vinaphone','isp_request_count_206_vinaphone'),
+            'viettel'   => array ('isp_request_count_200_viettel','isp_request_count_206_viettel'),
+            'fpt'       => array ('isp_request_count_200_fpt','isp_request_count_206_fpt'),
+            'mobiphone' => array ('isp_request_count_200_mobiphone','isp_request_count_206_mobiphone'),
+        );
+        $this->cacheHit->readableByCurrentUser = true;
+
+        $this->addSetting($this->cacheHit);
     }
 }
