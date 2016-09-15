@@ -54,10 +54,10 @@ class Settings extends \Piwik\Plugin\Settings
         $this->httpCode->availableValues  = array('request_count_200' => 'Http code 200', 'request_count_204' => 'Http code 200', 'request_count_206' => 'Http code 206');
         $this->httpCode->description   = 'The value will be only displayed in the following http code 2xx';
         $this->httpCode->defaultValue  = array(
-            'request_count_200','request_count_204','request_count_206',
-            'request_count_301','request_count_302','request_count_304',
-            'request_count_400','request_count_404',
-            'request_count_500','request_count_502','request_count_503','request_count_504'
+            '2xx'   => array('request_count_200','request_count_204','request_count_206'),
+            '3xx'   => array('request_count_301','request_count_302','request_count_304'),
+            '4xx'   => array('request_count_400','request_count_404'),
+            '5xx'   => array('request_count_500','request_count_502','request_count_503','request_count_504')
         );
         $this->httpCode->readableByCurrentUser = true;
 
@@ -69,7 +69,7 @@ class Settings extends \Piwik\Plugin\Settings
         $this->cacheHit        = new SystemSetting('cacheHit', 'Metrics Cache Hit');
         $this->cacheHit->type  = static::TYPE_ARRAY;
         $this->cacheHit->uiControlType = static::CONTROL_MULTI_SELECT;
-        $this->cacheHit->availableValues  = array('request_count_200' => 'Http code 200', 'request_count_204' => 'Http code 200', 'request_count_206' => 'Http code 206');
+        // $this->cacheHit->availableValues  = array();
         $this->cacheHit->description   = 'The value will be only displayed in the following http code 2xx';
         $this->cacheHit->defaultValue  = array(
             'vnpt'          => array ('isp_request_count_200_vnpt','isp_request_count_206_vnpt'),

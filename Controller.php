@@ -38,9 +38,9 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/bandwidth');
 
-        $this->setPeriodVariablesView($view);
+		$this->setPeriodVariablesView($view);
 
-        $view->graphBandwidth   = $this->getEvolutionGraphBw(array(), array('traffic_ps'));
+		$view->graphBandwidth   = $this->getEvolutionGraphBw(array(), array('traffic_ps'));
 
 		return $view->render();
 	}
@@ -49,9 +49,9 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/userspeed');
 
-        $this->setPeriodVariablesView($view);
+		$this->setPeriodVariablesView($view);
 
-        $view->graphUserSpeed   = $this->getEvolutionGraphUserSpeed(array(), array('avg_speed'), 'getIndexGraph');
+		$view->graphUserSpeed   = $this->getEvolutionGraphUserSpeed(array(), array('avg_speed'), 'getIndexGraph');
 
 		return $view->render();
 	}
@@ -60,22 +60,49 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/cachehit');
 
-        $this->setPeriodVariablesView($view);
+		$this->setGeneralVariablesView($view);
 
-        $cacheHitGraphs = array();
-        $cacheHit = API::getInstance()->getCacheHit();
+		$cacheHitGraphs   = array();
+		$cacheHit         = API::getInstance()->getCacheHit();
 
-        foreach ($cacheHit as $isp => $metrics) {
-            $cacheHitGraphs[] = array('title'=>Piwik::translate("QoS_".$isp), 'graph'=>$this->getGraphCacheHit(array(), array(), $isp));
-        }
+		foreach ($cacheHit as $isp => $metrics) {
+			$_GET['isp']        = $isp;
+			$cacheHitGraphs[]   = array('title'=>Piwik::translate("QoS_".$isp), 'graph'=>$this->getGraphCacheHit(array(), $metrics, $isp));
+		}
 
-        $view->graphCacheHitVnpt         = $this->getEvolutionGraphCacheHit(array(), array('isp_request_count_200_vnpt','isp_request_count_206_vnpt'));
-		$view->graphCacheHitVinaphone    = $this->getEvolutionGraph(array(), array('isp_request_count_200_vinaphone','isp_request_count_206_vinaphone'));
-		$view->graphCacheHitViettel      = $this->getEvolutionGraph(array(), array('isp_request_count_200_fpt','isp_request_count_206_fpt'));
-		$view->graphCacheHitFpt          = $this->getEvolutionGraph(array(), array('isp_request_count_200_viettel','isp_request_count_206_viettel'));
-		$view->graphCacheHitMobifone     = $this->getEvolutionGraph(array(), array('isp_request_count_200_vnpt','isp_request_count_206_vnpt'));
+		$view->cacheHitGraphs = $cacheHitGraphs;
 
 		return $view->render();
+	}
+
+	public function getGraphCacheHit(array $columns = array(), array $defaultColumns = array())
+	{
+		if (empty($columns)) {
+			$columns = Common::getRequestVar('columns', false);
+			if (false !== $columns) {
+				$columns = Piwik::getArrayFromApiParameter($columns);
+			}
+		}
+
+		$isp        = Common::getRequestVar('isp', false);
+		$cacheHit   = API::getInstance()->getCacheHit();
+		$selectableColumns = $cacheHit[$isp];
+
+		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolution');
+
+		$view->config->enable_sort          = false;
+		$view->config->max_graph_elements   = 30;
+		$view->requestConfig->filter_sort_column = 'label';
+		$view->requestConfig->filter_sort_order  = 'asc';
+		$view->requestConfig->disable_generic_filters=true;
+
+		// Can not check empty so have to hardcode. F**k me!
+		$view->config->columns_to_display = $defaultColumns;
+		// if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+		//     $view->config->columns_to_display = $defaultColumns;
+		// }
+
+		return $this->renderView($view);
 	}
 
 	public function httpCode()
@@ -85,12 +112,47 @@ class Controller extends \Piwik\Plugin\Controller
 		// $this->setGeneralVariablesView($view);
 		$this->setPeriodVariablesView($view);
 
-		$view->graphErrorCode200    = $this->getEvolutionGraph(array(), array('request_count_200','request_count_204','request_count_206'), 'getIndexGraph');
-		$view->graphErrorCode300    = $this->getEvolutionGraph(array(), array('request_count_301','request_count_302','request_count_304'), 'getIndexGraph');
-		$view->graphErrorCode400    = $this->getEvolutionGraph(array(), array('request_count_400','request_count_404'), 'getIndexGraph');
-		$view->graphErrorCode500    = $this->getEvolutionGraph(array(), array('request_count_500','request_count_502','request_count_503','request_count_504'), 'getIndexGraph');
+		$httpCodeGraphs = array();
+		$httpCpde       = API::getInstance()->getHttpCode();
 
-		return $view->render();
+		foreach ($httpCpde as $statusCode => $metrics) {
+			$_GET['statusCode'] = $statusCode;
+			$httpCodeGraphs[]   = array('title'=>Piwik::translate("QoS_".$statusCode), 'graph'=>$this->getGraphHttCode(array(), $metrics, $statusCode));
+		}
+
+		$view->httpCodeGraphs = $httpCodeGraphs;
+
+        return $view->render();
+	}
+
+	public function getGraphHttCode(array $columns = array(), array $defaultColumns = array())
+	{
+		if (empty($columns)) {
+			$columns = Common::getRequestVar('columns', false);
+			if (false !== $columns) {
+				$columns = Piwik::getArrayFromApiParameter($columns);
+			}
+		}
+
+		$statusCode = Common::getRequestVar('statusCode', false);
+		$httpCode   = API::getInstance()->getHttpCode();
+		$selectableColumns = $httpCode[$statusCode];
+
+		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolution');
+
+		$view->config->enable_sort          = false;
+		$view->config->max_graph_elements   = 30;
+		$view->requestConfig->filter_sort_column = 'label';
+		$view->requestConfig->filter_sort_order  = 'asc';
+		$view->requestConfig->disable_generic_filters=true;
+
+		// Can not check empty so have to hardcode. F**k me!
+		$view->config->columns_to_display = $defaultColumns;
+		// if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+		//     $view->config->columns_to_display = $defaultColumns;
+		// }
+
+		return $this->renderView($view);
 	}
 
 	public function isp()
@@ -202,81 +264,81 @@ class Controller extends \Piwik\Plugin\Controller
 		return $this->renderView($view);
 	}
 
-    public function getEvolutionGraphBw(array $columns = array(), array $defaultColumns = array())
-    {
-        if (empty($columns)) {
-            $columns = Common::getRequestVar('columns', false);
-            if (false !== $columns) {
-                $columns = Piwik::getArrayFromApiParameter($columns);
-            }
-        }
+	public function getEvolutionGraphBw(array $columns = array(), array $defaultColumns = array())
+	{
+		if (empty($columns)) {
+			$columns = Common::getRequestVar('columns', false);
+			if (false !== $columns) {
+				$columns = Piwik::getArrayFromApiParameter($columns);
+			}
+		}
 
-        $selectableColumns = $defaultColumns;
+		$selectableColumns = $defaultColumns;
 
-        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns = array('traffic_ps'), '', 'QoS.getGraphEvolutionBw');
+		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns = array('traffic_ps'), '', 'QoS.getGraphEvolutionBw');
 
-        $view->config->enable_sort          = false;
-        $view->config->max_graph_elements   = 30;
-        $view->requestConfig->filter_sort_column = 'label';
-        $view->requestConfig->filter_sort_order  = 'asc';
-        $view->requestConfig->disable_generic_filters=true;
+		$view->config->enable_sort          = false;
+		$view->config->max_graph_elements   = 30;
+		$view->requestConfig->filter_sort_column = 'label';
+		$view->requestConfig->filter_sort_order  = 'asc';
+		$view->requestConfig->disable_generic_filters=true;
 
-        if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-            $view->config->columns_to_display = $defaultColumns;
-        }
+		if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+			$view->config->columns_to_display = $defaultColumns;
+		}
 
-        return $this->renderView($view);
-    }
+		return $this->renderView($view);
+	}
 
-    public function getEvolutionGraphUserSpeed(array $columns = array(), array $defaultColumns = array())
-    {
-        if (empty($columns)) {
-            $columns = Common::getRequestVar('columns', false);
-            if (false !== $columns) {
-                $columns = Piwik::getArrayFromApiParameter($columns);
-            }
-        }
+	public function getEvolutionGraphUserSpeed(array $columns = array(), array $defaultColumns = array())
+	{
+		if (empty($columns)) {
+			$columns = Common::getRequestVar('columns', false);
+			if (false !== $columns) {
+				$columns = Piwik::getArrayFromApiParameter($columns);
+			}
+		}
 
-        $selectableColumns = $defaultColumns;
+		$selectableColumns = $defaultColumns;
 
-        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns = array('avg_speed'), '', 'QoS.getGraphEvolution');
+		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns = array('avg_speed'), '', 'QoS.getGraphEvolution');
 
-        $view->config->enable_sort          = false;
-        $view->config->max_graph_elements   = 30;
-        $view->requestConfig->filter_sort_column = 'label';
-        $view->requestConfig->filter_sort_order  = 'asc';
-        $view->requestConfig->disable_generic_filters=true;
+		$view->config->enable_sort          = false;
+		$view->config->max_graph_elements   = 30;
+		$view->requestConfig->filter_sort_column = 'label';
+		$view->requestConfig->filter_sort_order  = 'asc';
+		$view->requestConfig->disable_generic_filters=true;
 
-        if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-            $view->config->columns_to_display = $defaultColumns;
-        }
+		if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+			$view->config->columns_to_display = $defaultColumns;
+		}
 
-        return $this->renderView($view);
-    }
+		return $this->renderView($view);
+	}
 
-    public function getEvolutionGraphCacheHit(array $columns = array(), array $defaultColumns = array())
-    {
-        if (empty($columns)) {
-            $columns = Common::getRequestVar('columns', false);
-            if (false !== $columns) {
-                $columns = Piwik::getArrayFromApiParameter($columns);
-            }
-        }
+	public function getEvolutionGraphCacheHit(array $columns = array(), array $defaultColumns = array())
+	{
+		if (empty($columns)) {
+			$columns = Common::getRequestVar('columns', false);
+			if (false !== $columns) {
+				$columns = Piwik::getArrayFromApiParameter($columns);
+			}
+		}
 
-        $selectableColumns = $defaultColumns;
+		$selectableColumns = $defaultColumns;
 
-        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns = array('isp_request_count_200_vnpt','isp_request_count_206_vnpt', 'isp_request_count_200_vinaphone','isp_request_count_206_vinaphone'), '', 'QoS.getGraphEvolution');
+		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns = array('isp_request_count_200_vnpt','isp_request_count_206_vnpt', 'isp_request_count_200_vinaphone','isp_request_count_206_vinaphone'), '', 'QoS.getGraphEvolution');
 
-        $view->config->enable_sort          = false;
-        $view->config->max_graph_elements   = 30;
-        $view->requestConfig->filter_sort_column = 'label';
-        $view->requestConfig->filter_sort_order  = 'asc';
-        $view->requestConfig->disable_generic_filters=true;
+		$view->config->enable_sort          = false;
+		$view->config->max_graph_elements   = 30;
+		$view->requestConfig->filter_sort_column = 'label';
+		$view->requestConfig->filter_sort_order  = 'asc';
+		$view->requestConfig->disable_generic_filters=true;
 
-        if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-            $view->config->columns_to_display = $defaultColumns;
-        }
+		if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+			$view->config->columns_to_display = $defaultColumns;
+		}
 
-        return $this->renderView($view);
-    }
+		return $this->renderView($view);
+	}
 }

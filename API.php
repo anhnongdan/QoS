@@ -36,25 +36,25 @@ class API extends \Piwik\Plugin\API
 
 	function __construct()
 	{
-        $this->setHttpCode();
+		$this->setHttpCode();
 		$this->setCacheHit();
 	}
 
 	public function getHttpCode() {
-        return $this->httpCode;
-    }
+		return $this->httpCode;
+	}
 
 	private function setHttpCode()
-    {
-        $httpCode = new Settings('QoS');
-        $this->httpCode = $httpCode->httpCode->getValue();
-    }
+	{
+		$httpCode = new Settings('QoS');
+		$this->httpCode = $httpCode->httpCode->getValue();
+	}
 
-    public function getCacheHit() {
-        return $this->cachehit;
-    }
+	public function getCacheHit() {
+		return $this->cacheHit;
+	}
 
-    private function setCacheHit()
+	private function setCacheHit()
 	{
 		$cacheHitSetting = new Settings('cacheHit');
 		$this->cacheHit = $cacheHitSetting->cacheHit->getValue();
@@ -386,19 +386,38 @@ class API extends \Piwik\Plugin\API
 
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
+		$isp    = Common::getRequestVar('isp',    false);
+		$statusCode = Common::getRequestVar('statusCode',    false);
 
 		$typePeriod = $this->countStepPeriod($period);
 		$dates      = explode(",", $date);
 
-		// if (!$columns) {
-		// 	$columns = Common::getRequestVar('columns', false);
-		// 	if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
-		// 		$columns = $this->httpCode;
-		// 	}
-		// }
-		// if ( is_array($columns) ) {
-		// 	$columns = implode(",",$columns);
-		// }
+		if (!$columns) {
+			$columns = Common::getRequestVar('columns', false);
+			if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
+				$columns = $this->httpCode;
+				if ( $statusCode ){
+					$columns = $this->httpCode[$statusCode];
+				} else {
+					$columns = array();
+					foreach ($this->httpCode as $metrics) {
+						$columns[] = implode(",",$metrics);
+					}
+				}
+			} elseif (!$columns && $module == 'QoS' && $action == 'cacheHit') {
+				if ( $isp ){
+					$columns = $this->cacheHit[$isp];
+				} else {
+					$columns = array();
+					foreach ($this->cacheHit as $metrics) {
+						$columns[] = implode(",",$metrics);
+					}
+				}
+			}
+		}
+		if ( is_array($columns) ) {
+			$columns = implode(",",$columns);
+		}
 
 		$params = array(
 			'name'      => $nameCdn,
@@ -406,7 +425,7 @@ class API extends \Piwik\Plugin\API
 			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
 			'unit'      => $period,
 			// 'type'      => $columns ? $columns : 'request_count_200,request_count_204,request_count_206,request_count_301,request_count_302,request_count_304'
-			'type'      => $columns ? $columns : 'request_count_200'
+			'type'      => $columns
 		);
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
@@ -447,65 +466,65 @@ class API extends \Piwik\Plugin\API
 	public function getGraphEvolutionBw($idSite, $period, $date, $segment = false, $columns = false)
 	{
 		$cdnObj     = new Site($idSite);
-        $nameCdn    = $cdnObj->getName();
+		$nameCdn    = $cdnObj->getName();
 
-        $module = Common::getRequestVar('module', false);
-        $action = Common::getRequestVar('action', false);
+		$module = Common::getRequestVar('module', false);
+		$action = Common::getRequestVar('action', false);
 
-        $typePeriod = $this->countStepPeriod($period);
-        $dates      = explode(",", $date);
+		$typePeriod = $this->countStepPeriod($period);
+		$dates      = explode(",", $date);
 
-        // if (!$columns) {
-        //  $columns = Common::getRequestVar('columns', false);
-        //  if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
-        //      $columns = $this->httpCode;
-        //  }
-        // }
-        // if ( is_array($columns) ) {
-        //  $columns = implode(",",$columns);
-        // }
+		// if (!$columns) {
+		//  $columns = Common::getRequestVar('columns', false);
+		//  if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
+		//      $columns = $this->httpCode;
+		//  }
+		// }
+		// if ( is_array($columns) ) {
+		//  $columns = implode(",",$columns);
+		// }
 
-        $params = array(
-            'name'      => $nameCdn,
-            'date'      => ($typePeriod == 'range') ? $date : $dates[1],
-            'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
-            'unit'      => $period,
-            'type'      => $columns ? $columns : 'traffic_ps'
-        );
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
+			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
+			'unit'      => $period,
+			'type'      => $columns ? $columns : 'traffic_ps'
+		);
 
-        $dataCustomer = $this->apiGetCdnDataMk($params);
+		$dataCustomer = $this->apiGetCdnDataMk($params);
 
-        /**
-         * Make data like
-         *
-         * array (
-         *      "2016-07-17" => array ( "request_count_200" => X, "request_count_500" => Y ),
-         *      "2016-07-18" => array ( "request_count_200" => X, "request_count_500" => Y ),
-         *      "2016-07-19" => array ( "request_count_200" => X, "request_count_500" => Y )
-         * )
-         */
+		/**
+		 * Make data like
+		 *
+		 * array (
+		 *      "2016-07-17" => array ( "request_count_200" => X, "request_count_500" => Y ),
+		 *      "2016-07-18" => array ( "request_count_200" => X, "request_count_500" => Y ),
+		 *      "2016-07-19" => array ( "request_count_200" => X, "request_count_500" => Y )
+		 * )
+		 */
 
-        $dataCustomer = json_decode($dataCustomer, true);
-        $graphData = array();
+		$dataCustomer = json_decode($dataCustomer, true);
+		$graphData = array();
 
-        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-        {
-            foreach ( $dataCustomer['data'] as $valueOfCdn )
-            {
-                // Name of Cdn: $valueOfCdn['name']
-                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-                {
-                    // Type request: valueOfTypeRequest['type']
-                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-                    {
-                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
-                    }
-                }
-            }
-        }
-        ksort($graphData);
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
+					}
+				}
+			}
+		}
+		ksort($graphData);
 
-        return DataTable::makeFromIndexedArray($graphData);
+		return DataTable::makeFromIndexedArray($graphData);
 	}
 
 	private function apiGetCdnDataMk( $data )
