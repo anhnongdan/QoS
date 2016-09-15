@@ -28,7 +28,6 @@ class Menu extends \Piwik\Plugin\Menu
 		$this->addSubMenu($menu, Piwik::translate('QoS_HttpCode'),  'httpCode',     5);
 		$this->addSubMenu($menu, Piwik::translate('QoS_ISP'),       'isp',          6);
 		$this->addSubMenu($menu, Piwik::translate('QoS_Country'),   'country',      7);
-		$this->addSubMenu($menu, Piwik::translate('QoS_Development'),   'development',      8);
 	}
 
 	private function addSubMenu(MenuReporting $menu, $subMenu, $action, $order)

@@ -25,40 +25,40 @@ use Piwik\API\Request;
  */
 class API extends \Piwik\Plugin\API
 {
-    private $config;
-    private $overview;
-    private $bandwidth;
-    private $userSpeed;
-    private $cacheHit;
-    private $httpCode;
-    private $isp;
-    private $country;
+	private $config;
+	private $overview;
+	private $bandwidth;
+	private $userSpeed;
+	private $cacheHit;
+	private $httpCode;
+	private $isp;
+	private $country;
 
-    function __construct()
-    {
-        $this->setHttpCode();
-        $this->setConfig();
-    }
+	function __construct()
+	{
+		$this->setHttpCode();
+		$this->setConfig();
+	}
 
-    public function getHttpCode() {
-        return $this->httpCode;
-    }
+	public function getHttpCode() {
+		return $this->httpCode;
+	}
 
-    public function getConfig() {
-        return $this->config;
-    }
+	public function getConfig() {
+		return $this->config;
+	}
 
-    private function setHttpCode()
-    {
-        $httpCode = new Settings('QoS');
-        $this->httpCode = $httpCode->httpCode->getValue();
-    }
+	private function setHttpCode()
+	{
+		$httpCode = new Settings('QoS');
+		$this->httpCode = $httpCode->httpCode->getValue();
+	}
 
-    private function setConfig()
-    {
-        // code later
-    }
-    public function buildDataBwGraph()
+	private function setConfig()
+	{
+		// code later
+	}
+	public function buildDataBwGraph()
 	{
 		$columns = array('avg_speed');
 
@@ -103,7 +103,7 @@ class API extends \Piwik\Plugin\API
 		{
 //			$key = explode(" ", $keyTime);
 //			$tmp[ $key[1]."h" ] = $valueByTime['avg_speed'];
-            $tmp[ $keyTime."h" ] = $valueByTime['avg_speed'];
+			$tmp[ $keyTime."h" ] = $valueByTime['avg_speed'];
 		}
 		$graphData = $tmp;
 
@@ -232,9 +232,9 @@ class API extends \Piwik\Plugin\API
 
 	public function overViewSppedGraph($idSite, $metric)
 	{
-	    if(!$idSite) {
-            $idSite = Common::getRequestVar('idSite', 1);
-        }
+		if(!$idSite) {
+			$idSite = Common::getRequestVar('idSite', 1);
+		}
 
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
@@ -273,9 +273,9 @@ class API extends \Piwik\Plugin\API
 
 	public function overViewCacheHitGraph($idSite, $metric)
 	{
-	    if(!$idSite) {
-            $idSite = Common::getRequestVar('idSite', 1);
-        }
+		if(!$idSite) {
+			$idSite = Common::getRequestVar('idSite', 1);
+		}
 
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
@@ -317,21 +317,19 @@ class API extends \Piwik\Plugin\API
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
 
-        $module = Common::getRequestVar('module', false);
-        $action = Common::getRequestVar('action', false);
+		$module = Common::getRequestVar('module', false);
+		$action = Common::getRequestVar('action', false);
 
 		$typePeriod = $this->countStepPeriod($period);
 		$dates      = explode(",", $date);
 
 		if (!$columns) {
 			$columns = Common::getRequestVar('columns', false);
-            if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
-                $columns = $this->httpCode;
-            }
+			if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
+				$columns = $this->httpCode;
+			}
 		}
-echo "<pre>";
-    var_dump($columns);
-echo "</pre>";
+
 		if ( is_array($columns) ) {
 			$columns = implode(",",$columns);
 		}
@@ -379,31 +377,98 @@ echo "</pre>";
 		return DataTable::makeFromIndexedArray($graphData);
 	}
 
-    public function getDevelopmentAreaApi($idSite, $period, $date, $segment = false, $columns = false)
-    {
-        $cdnObj     = new Site($idSite);
+	public function getGraphEvolution($idSite, $date, $period, $columns = false)
+	{
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getName();
+
+		$module = Common::getRequestVar('module', false);
+		$action = Common::getRequestVar('action', false);
+
+		$typePeriod = $this->countStepPeriod($period);
+		$dates      = explode(",", $date);
+
+		// if (!$columns) {
+		// 	$columns = Common::getRequestVar('columns', false);
+		// 	if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
+		// 		$columns = $this->httpCode;
+		// 	}
+		// }
+		// if ( is_array($columns) ) {
+		// 	$columns = implode(",",$columns);
+		// }
+
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
+			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
+			'unit'      => $period,
+			// 'type'      => $columns ? $columns : 'request_count_200,request_count_204,request_count_206,request_count_301,request_count_302,request_count_304'
+			'type'      => $columns ? $columns : 'request_count_200'
+		);
+
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+
+		/**
+		 * Make data like
+		 *
+		 * array (
+		 *      "2016-07-17" => array ( "request_count_200" => X, "request_count_500" => Y ),
+		 *      "2016-07-18" => array ( "request_count_200" => X, "request_count_500" => Y ),
+		 *      "2016-07-19" => array ( "request_count_200" => X, "request_count_500" => Y )
+		 * )
+		 */
+
+		$dataCustomer = json_decode($dataCustomer, true);
+		$graphData = array();
+
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
+					}
+				}
+			}
+		}
+		ksort($graphData);
+
+		return DataTable::makeFromIndexedArray($graphData);
+	}
+
+	public function getGraphEvolutionBw($idSite, $period, $date, $segment = false, $columns = false)
+	{
+		$cdnObj     = new Site($idSite);
         $nameCdn    = $cdnObj->getName();
+
+        $module = Common::getRequestVar('module', false);
+        $action = Common::getRequestVar('action', false);
 
         $typePeriod = $this->countStepPeriod($period);
         $dates      = explode(",", $date);
-        echo "<pre>";
-            var_dump($columns);
-        echo "</pre>";
 
-        if (!$columns) {
-            $columns = Common::getRequestVar('columns', false);
-        }
-
-        if ( is_array($columns) ) {
-            $columns = implode(",",$columns);
-        }
+        // if (!$columns) {
+        //  $columns = Common::getRequestVar('columns', false);
+        //  if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
+        //      $columns = $this->httpCode;
+        //  }
+        // }
+        // if ( is_array($columns) ) {
+        //  $columns = implode(",",$columns);
+        // }
 
         $params = array(
             'name'      => $nameCdn,
             'date'      => ($typePeriod == 'range') ? $date : $dates[1],
             'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
             'unit'      => $period,
-            'type'      => $columns ? $columns : 'request_count_200,request_count_204,request_count_206,request_count_301,request_count_302,request_count_304'
+            'type'      => $columns ? $columns : 'traffic_ps'
         );
 
         $dataCustomer = $this->apiGetCdnDataMk($params);
@@ -437,14 +502,16 @@ echo "</pre>";
             }
         }
         ksort($graphData);
-
+echo "<pre>";
+    var_dump($graphData);
+echo "</pre>";
         return DataTable::makeFromIndexedArray($graphData);
-    }
+	}
 
-    public function get($idSite, $period, $date, $segment = false, $columns = false)
-    {
-        return DataTable::makeFromSimpleArray(array());
-    }
+	public function get($idSite, $period, $date, $segment = false, $columns = false)
+	{
+		return DataTable::makeFromSimpleArray(array());
+	}
 
 	private function apiGetCdnDataMk( $data )
 	{

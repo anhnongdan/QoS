@@ -37,17 +37,17 @@ class Controller extends \Piwik\Plugin\Controller
 	public function bandwidth()
 	{
 		$view = new View('@QoS/bandwidth');
-
-		$view->graphBandwidth   = $this->getEvolutionGraph(array('traffic_ps'), array('traffic_ps'));
+        $this->setGeneralVariablesView($view);
+		$view->graphBandwidth   = $this->getEvolutionGraphBw(array(), array('traffic_ps'));
 
 		return $view->render();
 	}
 
 	public function userSpeed()
 	{
-		$view = new View('@QoS/userSpeed');
-
-		$view->graphUserSpeed   = $this->getEvolutionGraph(array('avg_speed'), array('avg_speed'));
+		$view = new View('@QoS/userspeed');
+        $this->setGeneralVariablesView($view);
+		$view->graphUserSpeed   = $this->getEvolutionGraph(array('avg_speed'), array('avg_speed'), 'getIndexGraph');
 
 		return $view->render();
 	}
@@ -69,10 +69,13 @@ class Controller extends \Piwik\Plugin\Controller
 	{
 		$view = new View('@QoS/httpcode');
 
-		$view->graphErrorCode200    = $this->getEvolutionGraph(array('request_count_200','request_count_204','request_count_206'), array('request_count_200','request_count_204','request_count_206'));
-		$view->graphErrorCode300    = $this->getEvolutionGraph(array(), array('request_count_301','request_count_302','request_count_304'));
-		$view->graphErrorCode400    = $this->getEvolutionGraph(array(), array('request_count_400','request_count_404'));
-		$view->graphErrorCode500    = $this->getEvolutionGraph(array(), array('request_count_500','request_count_502','request_count_503','request_count_504'));
+		// $this->setGeneralVariablesView($view);
+		$this->setPeriodVariablesView($view);
+
+		$view->graphErrorCode200    = $this->getEvolutionGraph(array(), array('request_count_200','request_count_204','request_count_206'), 'getIndexGraph');
+		$view->graphErrorCode300    = $this->getEvolutionGraph(array(), array('request_count_301','request_count_302','request_count_304'), 'getIndexGraph');
+		$view->graphErrorCode400    = $this->getEvolutionGraph(array(), array('request_count_400','request_count_404'), 'getIndexGraph');
+		$view->graphErrorCode500    = $this->getEvolutionGraph(array(), array('request_count_500','request_count_502','request_count_503','request_count_504'), 'getIndexGraph');
 
 		return $view->render();
 	}
@@ -101,41 +104,41 @@ class Controller extends \Piwik\Plugin\Controller
 	}
 
 	public function development()
-    {
-        $view = new View('@QoS/development');
+	{
+		$view = new View('@QoS/development');
 
-        $view->graphDevelopment    = $this->getDevelopmentArea(array(), array('request_count_200','request_count_204','request_count_206'), 'getDevelopmentAreaApi');
+		$view->graphDevelopment    = $this->getDevelopmentArea(array(), array('request_count_200','request_count_204','request_count_206'), 'getDevelopmentAreaApi');
 
-        return $view->render();
-    }
+		return $view->render();
+	}
 
-    public function getDevelopmentArea(array $columns = array(), array $defaultColumns = array(), $apiMethod)
-    {
-        if (empty($columns)) {
-            $columns = Common::getRequestVar('columns', false);
-            if (false !== $columns) {
-                $columns = Piwik::getArrayFromApiParameter($columns);
-            }
-        }
+	public function getDevelopmentArea(array $columns = array(), array $defaultColumns = array(), $apiMethod)
+	{
+		if (empty($columns)) {
+			$columns = Common::getRequestVar('columns', false);
+			if (false !== $columns) {
+				$columns = Piwik::getArrayFromApiParameter($columns);
+			}
+		}
 
-        $selectableColumns = $defaultColumns;
+		$selectableColumns = $defaultColumns;
 
-        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.'.$apiMethod);
+		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.'.$apiMethod);
 
-        $view->config->selectable_columns = $selectableColumns;
-        $view->config->columns_to_display = $defaultColumns;
-        $view->config->enable_sort          = false;
-        $view->config->max_graph_elements   = 30;
-        $view->requestConfig->filter_sort_column = 'label';
-        $view->requestConfig->filter_sort_order  = 'asc';
-        $view->requestConfig->disable_generic_filters=true;
+		$view->config->selectable_columns = $selectableColumns;
+		$view->config->columns_to_display = $defaultColumns;
+		$view->config->enable_sort          = false;
+		$view->config->max_graph_elements   = 30;
+		$view->requestConfig->filter_sort_column = 'label';
+		$view->requestConfig->filter_sort_order  = 'asc';
+		$view->requestConfig->disable_generic_filters=true;
 
-//        if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-//            $view->config->columns_to_display = $defaultColumns;
-//        }
+	   // if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+	   //     $view->config->columns_to_display = $defaultColumns;
+	   // }
 
-        return $this->renderView($view);
-    }
+		return $this->renderView($view);
+	}
 
 	public function overViewBandwidthGraph($type = 'graphVerticalBar', $metrics = array())
 	{
@@ -191,13 +194,42 @@ class Controller extends \Piwik\Plugin\Controller
 		return $view->render();
 	}
 
-	public function getOverViewGraph()
+	public function getIndexGraph()
 	{
 		return $this->getEvolutionGraph(array(), array(), __FUNCTION__);
 	}
 
 	public function getEvolutionGraph(array $columns = array(), array $defaultColumns = array())
 	{
+		if (empty($columns)) {
+			$columns = Common::getRequestVar('columns', false);
+			if (false !== $columns) {
+				$columns = Piwik::getArrayFromApiParameter($columns);
+			}
+		}
+
+		$selectableColumns = $defaultColumns;
+echo "<pre>";
+    var_dump($defaultColumns);
+echo "</pre>";
+		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolution');
+
+		// $view->config->setDefaultColumnsToDisplay($selectableColumns);
+		$view->config->enable_sort          = false;
+		$view->config->max_graph_elements   = 30;
+		$view->requestConfig->filter_sort_column = 'label';
+		$view->requestConfig->filter_sort_order  = 'asc';
+		$view->requestConfig->disable_generic_filters=true;
+
+		if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+			$view->config->columns_to_display = $defaultColumns;
+		}
+
+		return $this->renderView($view);
+	}
+
+    public function getEvolutionGraphBw(array $columns = array(), array $defaultColumns = array())
+    {
         if (empty($columns)) {
             $columns = Common::getRequestVar('columns', false);
             if (false !== $columns) {
@@ -206,25 +238,20 @@ class Controller extends \Piwik\Plugin\Controller
         }
 
         $selectableColumns = $defaultColumns;
-        echo "<pre>";
-            var_dump("First", $selectableColumns);
-        echo "</pre>";
-        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getEvolutionOverview');
-        echo "<pre>";
-        var_dump("Second", $selectableColumns);
-        echo "</pre>";
-        $view->config->selectable_columns   = $selectableColumns;
+
+        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolutionBw');
+
+        // $view->config->setDefaultColumnsToDisplay($selectableColumns);
         $view->config->enable_sort          = false;
         $view->config->max_graph_elements   = 30;
         $view->requestConfig->filter_sort_column = 'label';
         $view->requestConfig->filter_sort_order  = 'asc';
         $view->requestConfig->disable_generic_filters=true;
-        $view->config->columns_to_display = $defaultColumns;
 
-//        if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-//            $view->config->columns_to_display = $defaultColumns;
-//        }
+        if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+            $view->config->columns_to_display = $defaultColumns;
+        }
 
         return $this->renderView($view);
-	}
+    }
 }
