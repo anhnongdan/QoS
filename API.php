@@ -37,8 +37,10 @@ class API extends \Piwik\Plugin\API
 	function __construct()
 	{
 		$this->setHttpCode();
-        $this->setCacheHit();
+		$this->setCacheHit();
 		$this->setUserSpeed();
+		$this->setIsp();
+		$this->setCountry();
 	}
 
 	public function getHttpCode() {
@@ -52,16 +54,16 @@ class API extends \Piwik\Plugin\API
 	}
 
 	public function getCacheHit() {
-        return $this->cacheHit;
-    }
+		return $this->cacheHit;
+	}
 
-    private function setCacheHit()
-    {
-        $cacheHitSetting = new Settings('cacheHit');
-        $this->cacheHit = $cacheHitSetting->cacheHit->getValue();
-    }
+	private function setCacheHit()
+	{
+		$cacheHitSetting = new Settings('cacheHit');
+		$this->cacheHit = $cacheHitSetting->cacheHit->getValue();
+	}
 
-    public function getUserSpeed() {
+	public function getUserSpeed() {
 		return $this->userSpeed;
 	}
 
@@ -69,6 +71,26 @@ class API extends \Piwik\Plugin\API
 	{
 		$userSpeedSetting = new Settings('speedDownload');
 		$this->userSpeed  = $userSpeedSetting->speedDownload->getValue();
+	}
+
+	public function getIsp() {
+		return $this->isp;
+	}
+
+	private function setIsp()
+	{
+		$ispSetting = new Settings('isp');
+		$this->isp  = $ispSetting->isp->getValue();
+	}
+
+	public function getCountry() {
+		return $this->country;
+	}
+
+	private function setCountry()
+	{
+		$countrySpeedSetting = new Settings('country');
+		$this->country  = $countrySpeedSetting->country->getValue();
 	}
 
 	public function buildDataBwGraph()
@@ -416,21 +438,30 @@ class API extends \Piwik\Plugin\API
 					}
 				}
 			} elseif (!$columns && $module == 'QoS' && $action == 'cacheHit') {
-                if ( $isp ){
-                    $columns = $this->cacheHit[$isp];
-                } else {
-                    $columns = array();
-                    foreach ($this->cacheHit as $metrics) {
-                        $columns[] = implode(",",$metrics);
-                    }
-                }
-            } elseif (!$columns && $module == 'QoS' && $action == 'userSpeed') {
+				if ( $isp ){
+					$columns = $this->cacheHit[$isp];
+				} else {
+					$columns = array();
+					foreach ($this->cacheHit as $metrics) {
+						$columns[] = implode(",",$metrics);
+					}
+				}
+			} elseif (!$columns && $module == 'QoS' && $action == 'userSpeed') {
 				$columns = $this->userSpeed;
-                echo "<pre>";
-                    var_dump($columns);
-                echo "</pre>";
+			} elseif (!$columns && $module == 'QoS' && $action == 'isp') {
+				if ( $isp ){
+					$columns = $this->isp[$isp];
+				} else {
+					$columns = array();
+					foreach ($this->isp as $metrics) {
+						$columns[] = implode(",",$metrics);
+					}
+				}
+			} elseif (!$columns && $module == 'QoS' && $action == 'country') {
+				$columns = $this->country;
 			}
 		}
+
 		if ( is_array($columns) ) {
 			$columns = implode(",",$columns);
 		}
@@ -440,7 +471,6 @@ class API extends \Piwik\Plugin\API
 			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
 			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
 			'unit'      => $period,
-			// 'type'      => $columns ? $columns : 'request_count_200,request_count_204,request_count_206,request_count_301,request_count_302,request_count_304'
 			'type'      => $columns
 		);
 
@@ -489,16 +519,6 @@ class API extends \Piwik\Plugin\API
 
 		$typePeriod = $this->countStepPeriod($period);
 		$dates      = explode(",", $date);
-
-		// if (!$columns) {
-		//  $columns = Common::getRequestVar('columns', false);
-		//  if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
-		//      $columns = $this->httpCode;
-		//  }
-		// }
-		// if ( is_array($columns) ) {
-		//  $columns = implode(",",$columns);
-		// }
 
 		$params = array(
 			'name'      => $nameCdn,
