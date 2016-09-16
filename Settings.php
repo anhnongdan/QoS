@@ -19,6 +19,9 @@ class Settings extends \Piwik\Plugin\Settings
 	/** @var QoSSetting */
 	public $qosSettings;
 
+    /** @var speedDownload */
+    public $speedDownload;
+
     /** @var httpCode */
     public $httpCode;
 
@@ -30,6 +33,7 @@ class Settings extends \Piwik\Plugin\Settings
 		$this->setIntroduction(Piwik::translate('QoS_SettingIntro'));
 
 		$this->createQoSSetting();
+        $this->createSpeedDownloadSetting();
         $this->createHttpCodeSetting();
         $this->createCacheHitSetting();
 	}
@@ -70,7 +74,7 @@ class Settings extends \Piwik\Plugin\Settings
         $this->cacheHit->type  = static::TYPE_ARRAY;
         $this->cacheHit->uiControlType = static::CONTROL_MULTI_SELECT;
         // $this->cacheHit->availableValues  = array();
-        $this->cacheHit->description   = 'The value will be only displayed in the following http code 2xx';
+        $this->cacheHit->description   = 'The value will be only displayed in the following http code 2xx in only isp';
         $this->cacheHit->defaultValue  = array(
             'vnpt'          => array ('isp_request_count_200_vnpt','isp_request_count_206_vnpt'),
             'vinaphone'     => array ('isp_request_count_200_vinaphone','isp_request_count_206_vinaphone'),
@@ -81,5 +85,18 @@ class Settings extends \Piwik\Plugin\Settings
         $this->cacheHit->readableByCurrentUser = true;
 
         $this->addSetting($this->cacheHit);
+    }
+
+    private function createSpeedDownloadSetting()
+    {
+        $this->speedDownload        = new SystemSetting('speedDownload', 'Metrics Cache Hit');
+        $this->speedDownload->type  = static::TYPE_STRING;
+        $this->speedDownload->uiControlType = static::CONTROL_TEXT;
+        // $this->cacheHit->availableValues  = array();
+        $this->speedDownload->description   = 'The value will be only displayed in the following speed download';
+        $this->speedDownload->defaultValue  = 'avg_speed';
+        $this->speedDownload->readableByCurrentUser = true;
+
+        $this->addSetting($this->speedDownload);
     }
 }

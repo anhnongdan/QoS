@@ -51,10 +51,39 @@ class Controller extends \Piwik\Plugin\Controller
 
 		$this->setPeriodVariablesView($view);
 
-		$view->graphUserSpeed   = $this->getEvolutionGraphUserSpeed(array(), array('avg_speed'), 'getIndexGraph');
+        $userSpeed = API::getInstance()->getUserSpeed();
+
+		$view->graphUserSpeed   = $this->getEvolutionGraphUserSpeed(array(), array($userSpeed));
 
 		return $view->render();
 	}
+
+    public function getEvolutionGraphUserSpeed(array $columns = array(), array $defaultColumns = array())
+    {
+        if (empty($columns)) {
+            $columns = Common::getRequestVar('columns', false);
+            if (false !== $columns) {
+                $columns = Piwik::getArrayFromApiParameter($columns);
+            }
+        }
+
+        $userSpeed = API::getInstance()->getUserSpeed();
+        $selectableColumns = array($userSpeed);
+
+        $view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolution');
+
+        $view->config->enable_sort          = false;
+        $view->config->max_graph_elements   = 30;
+        $view->requestConfig->filter_sort_column = 'label';
+        $view->requestConfig->filter_sort_order  = 'asc';
+        $view->requestConfig->disable_generic_filters=true;
+
+        if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+            $view->config->columns_to_display = $defaultColumns;
+        }
+
+        return $this->renderView($view);
+    }
 
 	public function cacheHit()
 	{
@@ -276,32 +305,6 @@ class Controller extends \Piwik\Plugin\Controller
 		$selectableColumns = $defaultColumns;
 
 		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns = array('traffic_ps'), '', 'QoS.getGraphEvolutionBw');
-
-		$view->config->enable_sort          = false;
-		$view->config->max_graph_elements   = 30;
-		$view->requestConfig->filter_sort_column = 'label';
-		$view->requestConfig->filter_sort_order  = 'asc';
-		$view->requestConfig->disable_generic_filters=true;
-
-		if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-			$view->config->columns_to_display = $defaultColumns;
-		}
-
-		return $this->renderView($view);
-	}
-
-	public function getEvolutionGraphUserSpeed(array $columns = array(), array $defaultColumns = array())
-	{
-		if (empty($columns)) {
-			$columns = Common::getRequestVar('columns', false);
-			if (false !== $columns) {
-				$columns = Piwik::getArrayFromApiParameter($columns);
-			}
-		}
-
-		$selectableColumns = $defaultColumns;
-
-		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns = array('avg_speed'), '', 'QoS.getGraphEvolution');
 
 		$view->config->enable_sort          = false;
 		$view->config->max_graph_elements   = 30;

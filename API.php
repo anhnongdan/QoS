@@ -37,7 +37,8 @@ class API extends \Piwik\Plugin\API
 	function __construct()
 	{
 		$this->setHttpCode();
-		$this->setCacheHit();
+        $this->setCacheHit();
+		$this->setUserSpeed();
 	}
 
 	public function getHttpCode() {
@@ -51,13 +52,23 @@ class API extends \Piwik\Plugin\API
 	}
 
 	public function getCacheHit() {
-		return $this->cacheHit;
+        return $this->cacheHit;
+    }
+
+    private function setCacheHit()
+    {
+        $cacheHitSetting = new Settings('cacheHit');
+        $this->cacheHit = $cacheHitSetting->cacheHit->getValue();
+    }
+
+    public function getUserSpeed() {
+		return $this->userSpeed;
 	}
 
-	private function setCacheHit()
+	private function setUserSpeed()
 	{
-		$cacheHitSetting = new Settings('cacheHit');
-		$this->cacheHit = $cacheHitSetting->cacheHit->getValue();
+		$userSpeedSetting = new Settings('speedDownload');
+		$this->userSpeed  = $userSpeedSetting->speedDownload->getValue();
 	}
 
 	public function buildDataBwGraph()
@@ -405,14 +416,19 @@ class API extends \Piwik\Plugin\API
 					}
 				}
 			} elseif (!$columns && $module == 'QoS' && $action == 'cacheHit') {
-				if ( $isp ){
-					$columns = $this->cacheHit[$isp];
-				} else {
-					$columns = array();
-					foreach ($this->cacheHit as $metrics) {
-						$columns[] = implode(",",$metrics);
-					}
-				}
+                if ( $isp ){
+                    $columns = $this->cacheHit[$isp];
+                } else {
+                    $columns = array();
+                    foreach ($this->cacheHit as $metrics) {
+                        $columns[] = implode(",",$metrics);
+                    }
+                }
+            } elseif (!$columns && $module == 'QoS' && $action == 'userSpeed') {
+				$columns = $this->userSpeed;
+                echo "<pre>";
+                    var_dump($columns);
+                echo "</pre>";
 			}
 		}
 		if ( is_array($columns) ) {
