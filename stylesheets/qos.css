@@ -1,22 +1,3 @@
-.box-overview h2 {
-    display: inline-block;
-    border-radius: 10px;
-    background-color: #F1F0EB;
-    max-width: 150px;
-    height: 150px;
-    line-height: 140px;
-    text-align: center;
-    vertical-align: middle;
-}
-
 .box-overview div {
-    margin: 0 0 1em -15em;
-    padding: 3em;
-    text-align: center;
-}
-
-.box-overview span {
-    color: #333;
-    font-size: 1em;
-    text-align: left;
+    margin: 15px;
 }

@@ -131,7 +131,7 @@ class API extends \Piwik\Plugin\API
 				}
 			}
 		}
-//		ksort($bandwidthData);
+		ksort($bandwidthData);
 		$graphData = array_slice($bandwidthData, -24, 24, true);
 		$tmp = array();
 		foreach ( $graphData as $keyTime => $valueByTime )
@@ -265,7 +265,7 @@ class API extends \Piwik\Plugin\API
 		return DataTable::makeFromIndexedArray(current($graphData));
 	}
 
-	public function overViewSppedGraph($idSite, $metric)
+	public function overViewSpeedGraph($idSite, $metric)
 	{
 		if(!$idSite) {
 			$idSite = Common::getRequestVar('idSite', 1);
@@ -303,7 +303,13 @@ class API extends \Piwik\Plugin\API
 			}
 		}
 
-		return current(current($graphData));
+		$userSpeed  = current(current($graphData));
+		$maxtime    = $userSpeed * 1.5;
+
+		return array(
+			'maxtime'       => (int)$maxtime,
+			'user_speed'    => (int)$userSpeed
+		);
 	}
 
 	public function overViewCacheHitGraph($idSite, $metric)
@@ -344,7 +350,13 @@ class API extends \Piwik\Plugin\API
 			}
 		}
 
-		return current(current($graphData));
+		$cacheHit   = current(current($graphData));
+		$maxtime    = $cacheHit * 1.5;
+
+		return array(
+			'maxtime'       => (int)$maxtime,
+			'cache_hit'     => (int)$cacheHit
+		);
 	}
 
 	public function getEvolutionOverview($idSite, $date, $period, $columns = false)

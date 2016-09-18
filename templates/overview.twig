@@ -4,10 +4,7 @@
         {{ graphOverviewBw|raw }}
         </div>
         <div class="col-md-12 box-overview">
-            <span>- Cache Hit</span>
-            <div>
-                <h2>{{ graphCacheHit|raw }}</h2>
-            </div>
+            {% include "@QoS/_overviewCacheHit.twig" %}
         </div>
         <div class="col-md-12">
         {{ graphIsp|raw }}
@@ -16,10 +13,7 @@
 
     <div class="col-md-6">
         <div class="col-md-12 box-overview">
-            <span>- Speed</span>
-            <div>
-                <h2>{{ graphSpeed|raw }}</h2>
-            </div>
+            {% include "@QoS/_overviewSpeed.twig" %}
         </div>
         <div class="col-md-12">
         {{ graphHttpCode|raw }}
