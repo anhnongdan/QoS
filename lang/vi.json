@@ -17,6 +17,7 @@
     "code3xx"     : "Lỗi 3xx",
     "code4xx"     : "Lỗi 4xx",
     "code5xx"     : "Lỗi 5xx",
-    "The_percentage_of_http_code_2xx" : "Tỷ lệ mã http 2xx"
+    "The_percentage_of_http_code_2xx" : "Tỷ lệ mã http 2xx",
+    "UserSpeed_Message": " trong %1$s phút sau cùng"
   }
 }

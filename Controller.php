@@ -9,6 +9,7 @@
 namespace Piwik\Plugins\QoS;
 
 use Piwik\API\Request;
+use Piwik\Metrics\Formatter;
 use Piwik\Common;
 use Piwik\Piwik;
 use Piwik\View;
@@ -30,6 +31,16 @@ class Controller extends \Piwik\Plugin\Controller
 		$view->graphCountry         = $this->overViewCountryGraph('graphPie', array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'), array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'));
 		// $view->graphCacheHit        = API::getInstance()->overViewCacheHitGraph($this->idSite, $metric = 'isp_request_count_200_viettel');
 		// $view->graphSpeed           = API::getInstance()->overViewSpeedGraph($this->idSite, $metric = 'avg_speed');
+
+        // Test add widget
+        $lastMinutes = 2;
+        $userSpeed = API::getInstance()->overviewGetUserSpeed( $lastMinutes, 'avg_speed' );
+
+        $formatter = new Formatter();
+
+        $view->lastMinutes  = $lastMinutes;
+        $view->user_speed   = $formatter->getPrettyNumber($userSpeed['user_speed']);
+        $view->refreshAfterXSecs = 5;
 
 		return $view->render();
 	}

@@ -136,8 +136,8 @@ class API extends \Piwik\Plugin\API
 		$tmp = array();
 		foreach ( $graphData as $keyTime => $valueByTime )
 		{
-//			$key = explode(" ", $keyTime);
-//			$tmp[ $key[1]."h" ] = $valueByTime['avg_speed'];
+			// $key = explode(" ", $keyTime);
+			// $tmp[ $key[1]."h" ] = $valueByTime['avg_speed'];
 			$tmp[ $keyTime."h" ] = $valueByTime['avg_speed'];
 		}
 		$graphData = $tmp;
@@ -574,6 +574,51 @@ class API extends \Piwik\Plugin\API
 
 		return DataTable::makeFromIndexedArray($graphData);
 	}
+
+	public function overviewGetUserSpeed( $lastMinutes, $metric )
+    {
+        $idSite = Common::getRequestVar('idSite', 1);
+
+        $cdnObj     = new Site($idSite);
+        $nameCdn    = $cdnObj->getName();
+
+        $now = time();
+        $before_3mins = $now - ($lastMinutes * 60);
+        $date_param = date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
+        $params = array(
+            'name'      => $nameCdn,
+            'date'      => "$date_param",
+            'period'    => 'range',
+            'unit'      => 'minute', // range 1 minute
+            'type'      => $metric ? $metric : 'avg_speed',
+        );
+
+        $dataCustomer = $this->apiGetCdnDataMk($params);
+        $dataCustomer = json_decode($dataCustomer, true);
+
+        $graphData = array();
+        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+        {
+            foreach ( $dataCustomer['data'] as $valueOfCdn )
+            {
+                // Name of Cdn: $valueOfCdn['name']
+                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+                {
+                    // Type request: valueOfTypeRequest['type']
+                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+                    {
+                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+                    }
+                }
+            }
+        }
+
+        $userSpeed  = current(current($graphData));
+
+        return array(
+            'user_speed'    => (int)$userSpeed
+        );
+    }
 
 	private function apiGetCdnDataMk( $data )
 	{
