@@ -11,7 +11,7 @@ namespace Piwik\Plugins\QoS;
 use Piwik\Common;
 use Piwik\DataTable;
 use Piwik\Site;
-
+use Piwik\Metrics\Formatter;
 use Piwik\API\Request;
 
 
@@ -575,9 +575,9 @@ class API extends \Piwik\Plugin\API
 		return DataTable::makeFromIndexedArray($graphData);
 	}
 
-	public function overviewGetUserSpeed( $lastMinutes, $metric )
+	public function overviewGetUserSpeed( $lastMinutes, $metrics , $refreshAfterXSecs )
     {
-        $idSite = Common::getRequestVar('idSite', 1);
+        $idSite     = Common::getRequestVar('idSite', 1);
 
         $cdnObj     = new Site($idSite);
         $nameCdn    = $cdnObj->getName();
@@ -590,7 +590,7 @@ class API extends \Piwik\Plugin\API
             'date'      => "$date_param",
             'period'    => 'range',
             'unit'      => 'minute', // range 1 minute
-            'type'      => $metric ? $metric : 'avg_speed',
+            'type'      => 'avg_speed',
         );
 
         $dataCustomer = $this->apiGetCdnDataMk($params);
@@ -613,10 +613,14 @@ class API extends \Piwik\Plugin\API
             }
         }
 
-        $userSpeed  = current(current($graphData));
+        (int)$userSpeed  = current(current($graphData));
+        $formatter = new Formatter();
 
         return array(
-            'user_speed'    => (int)$userSpeed
+            'user_speed'        => $formatter->getPrettyNumber((int)$userSpeed),
+            'refreshAfterXSecs' => 5,
+            'metrics'           => 'avg_speed',
+            'lastMinutes'       => $lastMinutes
         );
     }
 

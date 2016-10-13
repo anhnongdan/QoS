@@ -9,7 +9,6 @@
 namespace Piwik\Plugins\QoS;
 
 use Piwik\API\Request;
-use Piwik\Metrics\Formatter;
 use Piwik\Common;
 use Piwik\Piwik;
 use Piwik\View;
@@ -34,13 +33,14 @@ class Controller extends \Piwik\Plugin\Controller
 
         // Test add widget
         $lastMinutes = 2;
-        $userSpeed = API::getInstance()->overviewGetUserSpeed( $lastMinutes, 'avg_speed' );
-
-        $formatter = new Formatter();
+        $userSpeed = API::getInstance()->overviewGetUserSpeed( $lastMinutes, $metrics = 'avg_speed', $refreshAfterXSecs = 5 );
 
         $view->lastMinutes  = $lastMinutes;
-        $view->user_speed   = $formatter->getPrettyNumber($userSpeed['user_speed']);
+        $view->user_speed   = $userSpeed['user_speed'];
         $view->refreshAfterXSecs = 5;
+        $view->translations = array(
+            'user_speed' => Piwik::translate('QoS_UserSpeed')
+        );
 
 		return $view->render();
 	}
