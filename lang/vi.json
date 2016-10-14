@@ -9,7 +9,7 @@
     "NbAverage200": "%s average request 200",
     "HttpCode"    : "HTTP Code",
     "Bandwidth"   : "Băng thông",
-    "UserSpeed"   : "Tốc độ DL",
+    "UserSpeed"   : "Tốc độ Download",
     "CacheHit"    : "Cache Hit",
     "ISP"         : "ISP",
     "Country"     : "Quốc gia",
@@ -18,6 +18,6 @@
     "code4xx"     : "Lỗi 4xx",
     "code5xx"     : "Lỗi 5xx",
     "The_percentage_of_http_code_2xx" : "Tỷ lệ mã http 2xx",
-    "UserSpeed_Message": " trong %1$s phút sau cùng"
+    "UserSpeed_Message": " trong một giây"
   }
 }

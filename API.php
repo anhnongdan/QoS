@@ -153,7 +153,11 @@ class API extends \Piwik\Plugin\API
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
 
-		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
+		$lastMinutes = 2;
+		$now = time();
+		$before_3mins = $now - ($lastMinutes * 60);
+		$date_param = date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
+		// $date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
 			'name'      => $nameCdn,
 			'date'      => "$date_param",
@@ -575,54 +579,103 @@ class API extends \Piwik\Plugin\API
 		return DataTable::makeFromIndexedArray($graphData);
 	}
 
+	public function overviewGetBandwidth( $lastMinutes, $metrics , $refreshAfterXSecs )
+	{
+		$idSite     = Common::getRequestVar('idSite', 1);
+
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getName();
+
+		$now = time();
+		$before_3mins 	= $now - ($lastMinutes * 60);
+		$date_param 	= date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => "$date_param",
+			'period'    => 'range',
+			'unit'      => 'minute', // range 1 minute
+			'type'      => $metrics ? $metrics : 'traffic_ps',
+		);
+
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+		$dataCustomer = json_decode($dataCustomer, true);
+
+		$graphData = array();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+					}
+				}
+			}
+		}
+
+		(int)$bandwidth = current(current($graphData));
+		$formatter 		= new Formatter();
+
+		return array(
+			'bandwidth'        	=> $formatter->getPrettySizeFromBytes( (int)$bandwidth, '', 2 ),
+			'refreshAfterXSecs' => 5,
+			'metrics'           => 'traffic_ps',
+			'lastMinutes'       => $lastMinutes
+		);
+	}
+
 	public function overviewGetUserSpeed( $lastMinutes, $metrics , $refreshAfterXSecs )
-    {
-        $idSite     = Common::getRequestVar('idSite', 1);
+	{
+		$idSite     = Common::getRequestVar('idSite', 1);
 
-        $cdnObj     = new Site($idSite);
-        $nameCdn    = $cdnObj->getName();
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getName();
 
-        $now = time();
-        $before_3mins = $now - ($lastMinutes * 60);
-        $date_param = date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
-        $params = array(
-            'name'      => $nameCdn,
-            'date'      => "$date_param",
-            'period'    => 'range',
-            'unit'      => 'minute', // range 1 minute
-            'type'      => 'avg_speed',
-        );
+		$now = time();
+		$before_3mins = $now - ($lastMinutes * 60);
+		$date_param = date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => "$date_param",
+			'period'    => 'range',
+			'unit'      => 'minute', // range 1 minute
+			'type'      => 'avg_speed',
+		);
 
-        $dataCustomer = $this->apiGetCdnDataMk($params);
-        $dataCustomer = json_decode($dataCustomer, true);
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+		$dataCustomer = json_decode($dataCustomer, true);
 
-        $graphData = array();
-        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-        {
-            foreach ( $dataCustomer['data'] as $valueOfCdn )
-            {
-                // Name of Cdn: $valueOfCdn['name']
-                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-                {
-                    // Type request: valueOfTypeRequest['type']
-                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-                    {
-                        $graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
-                    }
-                }
-            }
-        }
+		$graphData = array();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+					}
+				}
+			}
+		}
 
-        (int)$userSpeed  = current(current($graphData));
-        $formatter = new Formatter();
+		(int)$userSpeed  = current(current($graphData));
+		$formatter = new Formatter();
 
-        return array(
-            'user_speed'        => $formatter->getPrettyNumber((int)$userSpeed),
-            'refreshAfterXSecs' => 5,
-            'metrics'           => 'avg_speed',
-            'lastMinutes'       => $lastMinutes
-        );
-    }
+		return array(
+			'user_speed'        => $formatter->getPrettySizeFromBytes((int)$userSpeed, '', 2),
+			'refreshAfterXSecs' => 5,
+			'metrics'           => 'avg_speed',
+			'lastMinutes'       => $lastMinutes
+		);
+	}
 
 	private function apiGetCdnDataMk( $data )
 	{

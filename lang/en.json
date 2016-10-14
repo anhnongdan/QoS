@@ -9,7 +9,7 @@
     "NbAverage200": "%s average request 200",
     "HttpCode"    : "HTTP Code",
     "Bandwidth"   : "Bandwidth",
-    "UserSpeed"   : "Speed DL",
+    "UserSpeed"   : "Speed Download",
     "CacheHit"    : "Cache Hit",
     "ISP"         : "ISP",
     "Country"     : "Country",
@@ -19,6 +19,6 @@
     "code5xx"     : "5xx",
     "The_percentage_of_http_code_2xx" : "The percentage of http code 2xx",
     "QoS_Development" : "Development",
-    "UserSpeed_Message": " in the last %1$s minutes"
+    "UserSpeed_Message": " per second"
   }
 }

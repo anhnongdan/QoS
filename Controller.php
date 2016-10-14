@@ -25,22 +25,33 @@ class Controller extends \Piwik\Plugin\Controller
 		$this->setPeriodVariablesView($view);
 
 		$view->graphHttpCode        = $this->overViewHttpCodeGraph( 'graphPie', array('request_count_200','request_count_204','request_count_206') );
-		$view->graphOverviewBw      = $this->overViewBandwidthGraph( 'graphVerticalBar', array('traffic_ps') );
+		// $view->graphOverviewBw      = $this->overViewBandwidthGraph( 'graphVerticalBar', array('traffic_ps') );
 		$view->graphIsp             = $this->overViewIspGraph('graphPie', array('isp_request_count_200_mobiphone,isp_request_count_200_vinaphone,isp_request_count_200_fpt,isp_request_count_200_viettel,isp_request_count_200_vnpt'), array('isp_request_count_200_mobiphone,isp_request_count_200_vinaphone,isp_request_count_200_fpt,isp_request_count_200_viettel,isp_request_count_200_vnpt'));
 		$view->graphCountry         = $this->overViewCountryGraph('graphPie', array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'), array('country_request_count_200_VN','country_request_count_200_US','country_request_count_200_CN'));
 		// $view->graphCacheHit        = API::getInstance()->overViewCacheHitGraph($this->idSite, $metric = 'isp_request_count_200_viettel');
 		// $view->graphSpeed           = API::getInstance()->overViewSpeedGraph($this->idSite, $metric = 'avg_speed');
 
-        // Test add widget
-        $lastMinutes = 2;
-        $userSpeed = API::getInstance()->overviewGetUserSpeed( $lastMinutes, $metrics = 'avg_speed', $refreshAfterXSecs = 5 );
+		// Widget bandwidth
+		$lastMinutes = 2;
 
-        $view->lastMinutes  = $lastMinutes;
-        $view->user_speed   = $userSpeed['user_speed'];
-        $view->refreshAfterXSecs = 5;
-        $view->translations = array(
-            'user_speed' => Piwik::translate('QoS_UserSpeed')
-        );
+		$bandwidth = API::getInstance()->overviewGetBandwidth( $lastMinutes, $metrics = 'traffic_ps', 5 );
+
+		$view->bw_lastMinutes  	= $lastMinutes;
+		$view->bandwidth   		= $bandwidth['bandwidth'];
+		$view->bw_refreshAfterXSecs = 5;
+		$view->bw_translations 	= array(
+			'bandwidth' => Piwik::translate('QoS_Bandwidth')
+		);
+
+		// Widget User speed
+		$userSpeed = API::getInstance()->overviewGetUserSpeed( $lastMinutes, $metrics = 'avg_speed', 5 );
+
+		$view->lastMinutes  = $lastMinutes;
+		$view->user_speed   = $userSpeed['user_speed'];
+		$view->refreshAfterXSecs = 5;
+		$view->translations = array(
+			'user_speed' => Piwik::translate('QoS_UserSpeed')
+		);
 
 		return $view->render();
 	}

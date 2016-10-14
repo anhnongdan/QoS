@@ -10,23 +10,23 @@ namespace Piwik\Plugins\QoS;
 
 class QoS extends \Piwik\Plugin
 {
-    public function registerEvents()
-    {
-        return array(
-            'AssetManager.getJavaScriptFiles'   => 'getJavaScriptFiles',
-            'AssetManager.getStylesheetFiles'   => 'getStylesheetFiles',
-        );
-    }
+	public function registerEvents()
+	{
+		return array(
+			'AssetManager.getJavaScriptFiles'   => 'getJavaScriptFiles',
+			'AssetManager.getStylesheetFiles'   => 'getStylesheetFiles',
+		);
+	}
 
-    public function getStylesheetFiles(&$stylesheets)
-    {
-        $stylesheets[] = "plugins/QoS/stylesheets/qos.css";
-    }
+	public function getStylesheetFiles(&$stylesheets)
+	{
+		$stylesheets[] = "plugins/QoS/stylesheets/qos.less";
+	}
 
-    public function getJavaScriptFiles(&$files)
-    {
-        $files[] = 'plugins/QoS/javascripts/qos.js';
-        $files[] = 'plugins/QoS/javascripts/jqplot.meterGaugeRenderer.js';
-        $files[] = 'plugins/QoS/javascripts/qosMeterGauge.js';
-    }
+	public function getJavaScriptFiles(&$files)
+	{
+		$files[] = 'plugins/QoS/javascripts/qos.js';
+		$files[] = 'plugins/QoS/javascripts/jqplot.meterGaugeRenderer.js';
+		$files[] = 'plugins/QoS/javascripts/qosMeterGauge.js';
+	}
 }

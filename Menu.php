@@ -23,8 +23,8 @@ class Menu extends \Piwik\Plugin\Menu
 
 		$this->addSubMenu($menu, Piwik::translate('QoS_Overview'),  'overview',     1);
 		$this->addSubMenu($menu, Piwik::translate('QoS_Bandwidth'), 'bandwidth',    2);
-        $this->addSubMenu($menu, Piwik::translate('QoS_UserSpeed'), 'userSpeed',    3);
-        $this->addSubMenu($menu, Piwik::translate('QoS_CacheHit'),  'cacheHit',     4);
+		$this->addSubMenu($menu, Piwik::translate('QoS_UserSpeed'), 'userSpeed',    3);
+		$this->addSubMenu($menu, Piwik::translate('QoS_CacheHit'),  'cacheHit',     4);
 		$this->addSubMenu($menu, Piwik::translate('QoS_HttpCode'),  'httpCode',     5);
 		$this->addSubMenu($menu, Piwik::translate('QoS_ISP'),       'isp',          6);
 		$this->addSubMenu($menu, Piwik::translate('QoS_Country'),   'country',      7);
