@@ -25,8 +25,8 @@ class QoS extends \Piwik\Plugin
 
 	public function getJavaScriptFiles(&$files)
 	{
-		$files[] = 'plugins/QoS/javascripts/qos.js';
 		$files[] = 'plugins/QoS/javascripts/jqplot.meterGaugeRenderer.js';
 		$files[] = 'plugins/QoS/javascripts/qosMeterGauge.js';
+        $files[] = 'plugins/QoS/javascripts/qos.js';
 	}
 }

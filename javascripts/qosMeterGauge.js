@@ -12,7 +12,6 @@
 (function($) {
 	$.fn.extend({
 		barometerWidget: function(userSettings) {
-
 			/**
 			 * Default settings
 			 */
@@ -40,8 +39,8 @@
 				ajaxRequest.addParams(settings.dataUrlParams, 'GET');
 				ajaxRequest.setFormat('json');
 				ajaxRequest.setCallback(function(r) {
-					var current= r[0][settings.valueName];
-					var max = r[0][settings.maxValueName];
+					var current = r[0][settings.valueName];
+					var max     = r[0][settings.maxValueName];
 
 					drawBarometerPlot(current, max);
 
