@@ -26,9 +26,10 @@ use Piwik\API\Request;
 class API extends \Piwik\Plugin\API
 {
 	private $config;
+	private $trafficByIsp;
 	private $overview;
-	private $bandwidth;
-	private $userSpeed;
+	private $totalSpeedDownload;
+	private $ispSpeedDownload;
 	private $cacheHit;
 	private $httpCode;
 	private $isp;
@@ -36,11 +37,34 @@ class API extends \Piwik\Plugin\API
 
 	function __construct()
 	{
+		$this->setOverview();
+		$this->setTraffic();
 		$this->setHttpCode();
 		$this->setCacheHit();
-		$this->setUserSpeed();
+		$this->setTotalSpeedDownload();
+		$this->setIspSpeedDownload();
 		$this->setIsp();
 		$this->setCountry();
+	}
+
+	public function getOverview() {
+		return $this->overview;
+	}
+
+	private function setOverview()
+	{
+		$overview = new Settings('QoS');
+		$this->overview = $overview->overview->getValue();
+	}
+
+	public function getTraffic() {
+		return $this->trafficByIsp;
+	}
+
+	private function setTraffic()
+	{
+		$traffic = new Settings('QoS');
+		$this->trafficByIsp = $traffic->traffic->getValue();
 	}
 
 	public function getHttpCode() {
@@ -63,14 +87,24 @@ class API extends \Piwik\Plugin\API
 		$this->cacheHit = $cacheHitSetting->cacheHit->getValue();
 	}
 
-	public function getUserSpeed() {
-		return $this->userSpeed;
+	public function getTotalSpeedDownload() {
+		return $this->totalSpeedDownload;
 	}
 
-	private function setUserSpeed()
+	private function setTotalSpeedDownload()
 	{
-		$userSpeedSetting = new Settings('speedDownload');
-		$this->userSpeed  = $userSpeedSetting->speedDownload->getValue();
+		$totalSpeedDowload = new Settings('totalSpeedDownload');
+		$this->totalSpeedDownload  = $totalSpeedDowload->totalSpeedDownload->getValue();
+	}
+
+	public function getIspSpeedDownload() {
+		return $this->ispSpeedDownload;
+	}
+
+	private function setIspSpeedDownload()
+	{
+		$ispSpeedDowload = new Settings('ispSpeedDownload');
+		$this->ispSpeedDownload  = $ispSpeedDowload->ispSpeedDownload->getValue();
 	}
 
 	public function getIsp() {
@@ -435,6 +469,7 @@ class API extends \Piwik\Plugin\API
 
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
+
 		$isp    = Common::getRequestVar('isp',    false);
 		$statusCode = Common::getRequestVar('statusCode',    false);
 
@@ -443,8 +478,24 @@ class API extends \Piwik\Plugin\API
 
 		if (!$columns) {
 			$columns = Common::getRequestVar('columns', false);
-			if( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
-				$columns = $this->httpCode;
+            if( !$columns && $module == 'QoS' && $action == 'overview' ) {
+                if ( $isp ){
+                    $columns = $this->overview[$isp];
+                } else {
+                    $columns = array();
+                    $columns[] = implode(",",$this->overview);
+                }
+            } elseif( !$columns && $module == 'QoS' && $action == 'mnBandwidth' ) {
+				if ( $isp ){
+					$columns = $this->trafficByIsp[$isp];
+				} else {
+					$columns = array();
+					foreach ($this->trafficByIsp as $metrics) {
+						$columns[] = implode(",",$metrics);
+					}
+				}
+
+			} elseif( !$columns && $module == 'QoS' && $action == 'httpCode' ) {
 				if ( $statusCode ){
 					$columns = $this->httpCode[$statusCode];
 				} else {
@@ -462,7 +513,7 @@ class API extends \Piwik\Plugin\API
 						$columns[] = implode(",",$metrics);
 					}
 				}
-			} elseif (!$columns && $module == 'QoS' && $action == 'userSpeed') {
+			} elseif (!$columns && $module == 'QoS' && $action == 'mnSizeTraffic') {
 				$columns = $this->userSpeed;
 			} elseif (!$columns && $module == 'QoS' && $action == 'isp') {
 				if ( $isp ){
@@ -520,12 +571,13 @@ class API extends \Piwik\Plugin\API
 				}
 			}
 		}
+
 		ksort($graphData);
 
 		return DataTable::makeFromIndexedArray($graphData);
 	}
 
-	public function getGraphEvolutionBw($idSite, $period, $date, $segment = false, $columns = false)
+	public function getGraphEvolutionCacheHit($idSite, $date, $period, $columns = false)
 	{
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
@@ -533,32 +585,40 @@ class API extends \Piwik\Plugin\API
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
 
+		$isp    = Common::getRequestVar('isp',    false);
+
 		$typePeriod = $this->countStepPeriod($period);
 		$dates      = explode(",", $date);
+
+		if (!$columns) {
+			$columns = Common::getRequestVar('columns', false);
+			if (!$columns && $module == 'QoS' && $action == 'mnCacheHit') {
+                if ($isp) {
+                    $columns = $this->cacheHit[$isp];
+                } else {
+                    $columns = array();
+                    foreach ($this->cacheHit as $metrics) {
+                        $columns[] = implode(",", $metrics);
+                    }
+                }
+            }
+		}
+
+		if ( is_array($columns) ) {
+			$columns = implode(",",$columns);
+		}
 
 		$params = array(
 			'name'      => $nameCdn,
 			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
 			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
 			'unit'      => $period,
-			'type'      => $columns ? $columns : 'traffic_ps'
+			'type'      => $columns
 		);
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
-
-		/**
-		 * Make data like
-		 *
-		 * array (
-		 *      "2016-07-17" => array ( "request_count_200" => X, "request_count_500" => Y ),
-		 *      "2016-07-18" => array ( "request_count_200" => X, "request_count_500" => Y ),
-		 *      "2016-07-19" => array ( "request_count_200" => X, "request_count_500" => Y )
-		 * )
-		 */
-
 		$dataCustomer = json_decode($dataCustomer, true);
-		$graphData = array();
-
+		$graphData  = array();
 		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
 		{
 			foreach ( $dataCustomer['data'] as $valueOfCdn )
@@ -570,6 +630,7 @@ class API extends \Piwik\Plugin\API
 					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
 					{
 						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
+                        $graphData[ $valueByTime['name'] ][ 'total' ] += $valueByTime['value'];
 					}
 				}
 			}
@@ -579,28 +640,48 @@ class API extends \Piwik\Plugin\API
 		return DataTable::makeFromIndexedArray($graphData);
 	}
 
-	public function overviewGetBandwidth( $lastMinutes, $metrics , $refreshAfterXSecs )
+	public function getGraphEvolutionAvgSpeed($idSite, $date, $period, $columns = false)
 	{
-		$idSite     = Common::getRequestVar('idSite', 1);
-
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getName();
 
-		$now = time();
-		$before_3mins 	= $now - ($lastMinutes * 60);
-		$date_param 	= date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
+		$module = Common::getRequestVar('module', false);
+		$action = Common::getRequestVar('action', false);
+
+		$isp    = Common::getRequestVar('isp',    false);
+
+		$typePeriod = $this->countStepPeriod($period);
+		$dates      = explode(",", $date);
+
+		if (!$columns) {
+			$columns = Common::getRequestVar('columns', false);
+			if (!$columns && $module == 'QoS' && $action == 'mnSizeTraffic') {
+                if ($isp) {
+                    $columns = $this->totalSpeedDownload[$isp];
+                } else {
+                    $columns = array();
+                    foreach ($this->totalSpeedDownload as $metrics) {
+                        $columns[] = implode(",", $metrics);
+                    }
+                }
+            }
+		}
+
+		if ( is_array($columns) ) {
+			$columns = implode(",",$columns);
+		}
+
 		$params = array(
 			'name'      => $nameCdn,
-			'date'      => "$date_param",
-			'period'    => 'range',
-			'unit'      => 'minute', // range 1 minute
-			'type'      => $metrics ? $metrics : 'traffic_ps',
+			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
+			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
+			'unit'      => $period,
+			'type'      => $columns
 		);
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
 		$dataCustomer = json_decode($dataCustomer, true);
-
-		$graphData = array();
+		$graphData  = array();
 		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
 		{
 			foreach ( $dataCustomer['data'] as $valueOfCdn )
@@ -611,22 +692,119 @@ class API extends \Piwik\Plugin\API
 					// Type request: valueOfTypeRequest['type']
 					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
 					{
-						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
+                        $graphData[ $valueByTime['name'] ][ 'total' ] += $valueByTime['value'];
 					}
 				}
 			}
 		}
+		ksort($graphData);
 
-		(int)$bandwidth = current(current($graphData));
-		$formatter 		= new Formatter();
-
-		return array(
-			'bandwidth'        	=> $formatter->getPrettySizeFromBytes( (int)$bandwidth, '', 2 ),
-			'refreshAfterXSecs' => 5,
-			'metrics'           => 'traffic_ps',
-			'lastMinutes'       => $lastMinutes
-		);
+		return DataTable::makeFromIndexedArray($graphData);
 	}
+
+//	public function getGraphEvolutionBw($idSite, $period, $date, $segment = false, $columns = false)
+//	{
+//		$cdnObj     = new Site($idSite);
+//		$nameCdn    = $cdnObj->getName();
+//
+//		$module = Common::getRequestVar('module', false);
+//		$action = Common::getRequestVar('action', false);
+//
+//		$typePeriod = $this->countStepPeriod($period);
+//		$dates      = explode(",", $date);
+//
+//		$params = array(
+//			'name'      => $nameCdn,
+//			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
+//			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
+//			'unit'      => $period,
+//			'type'      => $columns ? $columns : 'traffic_ps'
+//		);
+//
+//		$dataCustomer = $this->apiGetCdnDataMk($params);
+//
+//		/**
+//		 * Make data like
+//		 *
+//		 * array (
+//		 *      "2016-07-17" => array ( "request_count_200" => X, "request_count_500" => Y ),
+//		 *      "2016-07-18" => array ( "request_count_200" => X, "request_count_500" => Y ),
+//		 *      "2016-07-19" => array ( "request_count_200" => X, "request_count_500" => Y )
+//		 * )
+//		 */
+//
+//		$dataCustomer = json_decode($dataCustomer, true);
+//		$graphData = array();
+//
+//		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+//		{
+//			foreach ( $dataCustomer['data'] as $valueOfCdn )
+//			{
+//				// Name of Cdn: $valueOfCdn['name']
+//				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+//				{
+//					// Type request: valueOfTypeRequest['type']
+//					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+//					{
+//						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
+//					}
+//				}
+//			}
+//		}
+//		ksort($graphData);
+//
+//		return DataTable::makeFromIndexedArray($graphData);
+//	}
+
+//	public function overviewGetBandwidth( $lastMinutes, $metrics , $refreshAfterXSecs )
+//	{
+//		$idSite     = Common::getRequestVar('idSite', 1);
+//
+//		$cdnObj     = new Site($idSite);
+//		$nameCdn    = $cdnObj->getName();
+//
+//		$now = time();
+//		$before_3mins 	= $now - ($lastMinutes * 60);
+//		$date_param 	= date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
+//		$params = array(
+//			'name'      => $nameCdn,
+//			'date'      => "$date_param",
+//			'period'    => 'range',
+//			'unit'      => 'minute', // range 1 minute
+//			'type'      => $metrics ? $metrics : 'traffic_ps',
+//		);
+//
+//		$dataCustomer = $this->apiGetCdnDataMk($params);
+//		$dataCustomer = json_decode($dataCustomer, true);
+//
+//		$graphData = array();
+//		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+//		{
+//			foreach ( $dataCustomer['data'] as $valueOfCdn )
+//			{
+//				// Name of Cdn: $valueOfCdn['name']
+//				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+//				{
+//					// Type request: valueOfTypeRequest['type']
+//					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+//					{
+//						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
+//					}
+//				}
+//			}
+//		}
+//
+//		(int)$bandwidth = current(current($graphData));
+//		$formatter 		= new Formatter();
+//
+//		return array(
+//			'bandwidth'        	=> $formatter->getPrettySizeFromBytes( (int)$bandwidth, '', 2 ),
+//			'refreshAfterXSecs' => 5,
+//			'metrics'           => 'traffic_ps',
+//			'lastMinutes'       => $lastMinutes
+//		);
+//	}
 
 	public function overviewGetUserSpeed( $lastMinutes, $metrics , $refreshAfterXSecs )
 	{
@@ -679,7 +857,7 @@ class API extends \Piwik\Plugin\API
 
 	private function apiGetCdnDataMk( $data )
 	{
-		$url = 'http://172.20.4.63:8001';
+		$url = 'http://172.16.64.169:8001';
 		$data['path'] = '/api/v1/stat';
 
 		$query = $data['path']."?name=".$data['name']."&date=".$data['date']."&period=".$data['period']."&unit=".$data['unit']."&type=".$data['type'];
