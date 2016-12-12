@@ -2,6 +2,10 @@
 	<h2 piwik-enriched-headline data-graph-id="QoS.overviewGraph">{{ 'QoS_Overview'|translate }}</h2>
 
     {{ graphOverview|raw }}
+
+	<h2 class="visitsSummaryReportTitle">{{ 'QoS_Report'|translate }}</h2>
+    {% include "@QoS/_sparklines.twig" %}
+
 	{#<div class="col-md-6">#}
 		{#<div class="col-md-12">#}
 			{#{{ graphOverviewBw|raw }}#}

@@ -14,7 +14,6 @@ use Piwik\Site;
 use Piwik\Metrics\Formatter;
 use Piwik\API\Request;
 
-
 /**
  * ExampleUI API is also an example API useful if you are developing a Piwik plugin.
  *
@@ -103,8 +102,8 @@ class API extends \Piwik\Plugin\API
 
 	private function setIspSpeedDownload()
 	{
-		$ispSpeedDowload = new Settings('ispSpeedDownload');
-		$this->ispSpeedDownload  = $ispSpeedDowload->ispSpeedDownload->getValue();
+		$ispSpeedDowload            = new Settings('ispSpeedDownload');
+		$this->ispSpeedDownload     = $ispSpeedDowload->ispSpeedDownload->getValue();
 	}
 
 	public function getIsp() {
@@ -603,7 +602,9 @@ class API extends \Piwik\Plugin\API
                 }
             }
 		}
-
+        if (in_array('isp_request_count_2xx_total', $columns)) {
+            unset($columns['isp_request_count_2xx_total']);
+        }
 		if ( is_array($columns) ) {
 			$columns = implode(",",$columns);
 		}
@@ -629,8 +630,73 @@ class API extends \Piwik\Plugin\API
 					// Type request: valueOfTypeRequest['type']
 					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
 					{
-						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
-                        $graphData[ $valueByTime['name'] ][ 'total' ] += $valueByTime['value'];
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ]    = $valueByTime['value'];
+                        $graphData[ $valueByTime['name'] ][ 'isp_request_count_2xx_total' ] += $valueByTime['value'];
+					}
+				}
+			}
+		}
+		ksort($graphData);
+
+		return DataTable::makeFromIndexedArray($graphData);
+	}
+
+	public function getGraphEvolutionBandwidth($idSite, $date, $period, $columns = false)
+	{
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getName();
+
+		$module = Common::getRequestVar('module', false);
+		$action = Common::getRequestVar('action', false);
+
+		$isp    = Common::getRequestVar('isp',    false);
+
+		$typePeriod = $this->countStepPeriod($period);
+		$dates      = explode(",", $date);
+
+		if (!$columns) {
+			$columns = Common::getRequestVar('columns', false);
+			if (!$columns && $module == 'QoS' && $action == 'mnBandwidth') {
+                if ($isp) {
+                    $columns = $this->getTraffic()[$isp];
+                } else {
+                    $columns = array();
+                    foreach ($this->getTraffic() as $metrics) {
+                        $columns[] = implode(",", $metrics);
+                    }
+                }
+            }
+		}
+        if (in_array('isp_isp_traffic_ps_total', $columns)) {
+            unset($columns['isp_isp_traffic_ps_total']);
+        }
+		if ( is_array($columns) ) {
+			$columns = implode(",",$columns);
+		}
+
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
+			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
+			'unit'      => $period,
+			'type'      => $columns
+		);
+
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+		$dataCustomer = json_decode($dataCustomer, true);
+		$graphData  = array();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ]    = $valueByTime['value'];
+                        $graphData[ $valueByTime['name'] ][ 'isp_isp_traffic_ps_total' ]    += $valueByTime['value'];
 					}
 				}
 			}
@@ -657,16 +723,19 @@ class API extends \Piwik\Plugin\API
 			$columns = Common::getRequestVar('columns', false);
 			if (!$columns && $module == 'QoS' && $action == 'mnSizeTraffic') {
                 if ($isp) {
-                    $columns = $this->totalSpeedDownload[$isp];
+                    $columns = $this->ispSpeedDownload[$isp];
                 } else {
                     $columns = array();
-                    foreach ($this->totalSpeedDownload as $metrics) {
+                    foreach ($this->ispSpeedDownload as $metrics) {
                         $columns[] = implode(",", $metrics);
                     }
                 }
             }
 		}
 
+        if (in_array('isp_avg_speed_total', $columns)) {
+            unset($columns['isp_avg_speed_total']);
+        }
 		if ( is_array($columns) ) {
 			$columns = implode(",",$columns);
 		}
@@ -693,7 +762,7 @@ class API extends \Piwik\Plugin\API
 					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
 					{
 						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
-                        $graphData[ $valueByTime['name'] ][ 'total' ] += $valueByTime['value'];
+                        $graphData[ $valueByTime['name'] ][ 'isp_avg_speed_total' ] += $valueByTime['value'];
 					}
 				}
 			}
@@ -702,6 +771,81 @@ class API extends \Piwik\Plugin\API
 
 		return DataTable::makeFromIndexedArray($graphData);
 	}
+
+    public function getBrowsers($idSite, $period, $date, $segment = false)
+    {
+
+        $data = \Piwik\API\Request::processRequest('DevicesDetection.getBrowsers', array(
+            'idSite'    => $idSite,
+            'period'    => $period,
+            'date'      => $date,
+            'segment'   => $segment,
+        ));
+        $data->applyQueuedFilters();
+
+        $result = $data->getEmptyClone($keepFilters = false);
+
+        foreach ($data->getRows() as $visitRow) {
+            $browserName = $visitRow->getColumn('label');
+
+            $result->addRowFromSimpleArray(array(
+                'label'             => $browserName,
+                'nb_uniq_visitors'  => $visitRow->getColumn('nb_uniq_visitors')
+            ));
+        }
+
+        return $result;
+    }
+
+    public function getCity($idSite, $period, $date, $segment = false)
+    {
+
+        $data = \Piwik\API\Request::processRequest('UserCountry.getCity', array(
+            'idSite'    => $idSite,
+            'period'    => $period,
+            'date'      => $date,
+            'segment'   => $segment,
+        ));
+        $data->applyQueuedFilters();
+
+        $result = $data->getEmptyClone($keepFilters = false);
+
+        foreach ($data->getRows() as $visitRow) {
+            $browserName = $visitRow->getColumn('label');
+
+            $result->addRowFromSimpleArray(array(
+                'label'             => $browserName,
+                'nb_uniq_visitors'  => $visitRow->getColumn('nb_uniq_visitors')
+            ));
+        }
+
+        return $result;
+    }
+
+    public function getUrls($idSite, $period, $date, $segment = false)
+    {
+
+        $data = \Piwik\API\Request::processRequest('Actions.getPageUrls', array(
+            'idSite'    => $idSite,
+            'period'    => $period,
+            'date'      => $date,
+            'segment'   => $segment,
+        ));
+        $data->applyQueuedFilters();
+
+        $result = $data->getEmptyClone($keepFilters = false);
+
+//        foreach ($data->getRows() as $visitRow) {
+//            $browserName = $visitRow->getColumn('label');
+//
+//            $result->addRowFromSimpleArray(array(
+//                'label'             => $browserName,
+//                'nb_uniq_visitors'  => $visitRow->getColumn('nb_uniq_visitors')
+//            ));
+//        }
+
+        return $result;
+    }
 
 //	public function getGraphEvolutionBw($idSite, $period, $date, $segment = false, $columns = false)
 //	{
@@ -857,7 +1001,7 @@ class API extends \Piwik\Plugin\API
 
 	private function apiGetCdnDataMk( $data )
 	{
-		$url = 'http://172.16.64.169:8001';
+        $url = 'http://127.0.0.1:8001';
 		$data['path'] = '/api/v1/stat';
 
 		$query = $data['path']."?name=".$data['name']."&date=".$data['date']."&period=".$data['period']."&unit=".$data['unit']."&type=".$data['type'];

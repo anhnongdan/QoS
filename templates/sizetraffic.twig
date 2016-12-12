@@ -1,6 +1,15 @@
-<h2 piwik-enriched-headline data-graph-id="QoS.userSpeedGraph">{{ 'QoS_TrafficPerIsp'|translate }}</h2>
+<h2 piwik-enriched-headline data-graph-id="QoS.sizeTrafficGraph">{{ 'QoS_SpeedAllIsp'|translate }}</h2>
+<div class="categoryEntry" style="clear:both">
+    {{ graphTraffic[4].graph|raw }}
+</div>
 
-{{ graphTrafficPerIsp|raw }}
+<h2 piwik-enriched-headline data-graph-id="QoS.TrafficIspGraph">{{ 'QoS_SpeedByIsp'|translate }}</h2>
 
-{#<h3>{{ 'QoS_TrafficByIsp'|translate }}</h3><br>#}
-{#{{ graphTrafficByIsp|raw }}#}
+{% for isp in graphTraffic %}
+    {% if isp.title != 'QoS_total' %}
+        <div class="categoryEntry" style="clear:both">
+            <h3>{{ isp.title }}</h3>
+            {{ isp.graph|raw }}
+        </div>
+    {% endif %}
+{% endfor %}

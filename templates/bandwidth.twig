@@ -1,10 +1,15 @@
-<h2 piwik-enriched-headline data-graph-id="QoS.bwGraph">{{ 'QoS_Bandwidth'|translate }}</h2>
+<h2 piwik-enriched-headline data-graph-id="QoS.bwGraph">{{ 'QoS_BandwidthAllIsp'|translate }}</h2>
+<div class="categoryEntry" style="clear:both">
+    {{ bandwidthGraphs[4].graph|raw }}
+</div>
+
+<h2 piwik-enriched-headline data-graph-id="QoS.bwIspGraph">{{ 'QoS_BandwidthByIsp'|translate }}</h2>
 
 {% for isp in bandwidthGraphs %}
+    {% if isp.title != 'QoS_total' %}
     <div class="categoryEntry" style="clear:both">
-        <h2>{{ isp.title }}</h2>
-
+        <h3>{{ isp.title }}</h3>
         {{ isp.graph|raw }}
-
     </div>
+        {% endif %}
 {% endfor %}
