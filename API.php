@@ -1001,7 +1001,9 @@ class API extends \Piwik\Plugin\API
 
 	private function apiGetCdnDataMk( $data )
 	{
-        $url = 'http://127.0.0.1:8001';
+		// $url = 'http://172.16.64.169:8001';
+        $url = 'http://113.164.27.58:8001';
+        // $url = 'http://127.0.0.1:8001';
 		$data['path'] = '/api/v1/stat';
 
 		$query = $data['path']."?name=".$data['name']."&date=".$data['date']."&period=".$data['period']."&unit=".$data['unit']."&type=".$data['type'];
