@@ -17,8 +17,7 @@ use Piwik\Config;
 class Controller extends \Piwik\Plugin\Controller
 {
 
-	public function overview()
-	{
+	public function overview() {
 		$view = new View('@QoS/overview');
 
 		$this->setPeriodVariablesView($view);
@@ -614,28 +613,28 @@ class Controller extends \Piwik\Plugin\Controller
 
 	public function widRealtimeThru() {
 
-	    $lastMinutes = 2; // Config variable later
-        $lastNData = API::getInstance()->getTraffps($this->idSite, $lastMinutes, 'traffic_ps');
+		$lastMinutes = 2; // Config variable later
+		$lastNData = API::getInstance()->getTraffps($this->idSite, $lastMinutes, 'traffic_ps');
 
-        $view = new View('@QoS/widThruput');
-        $view->lastMinutes = $lastMinutes;
-        $view->traffic_ps  = $lastNData['traffic_ps'];
-        $view->unit         = $lastNData['unit'];
-        $view->refreshAfterXSecs = Config::getInstance()->General['live_widget_refresh_after_seconds'];
+		$view = new View('@QoS/widThruput');
+		$view->lastMinutes = $lastMinutes;
+		$view->traffic_ps  = $lastNData['traffic_ps'];
+		$view->unit         = $lastNData['unit'];
+		$view->refreshAfterXSecs = Config::getInstance()->General['live_widget_refresh_after_seconds'];
 
-        return $view->render();
+		return $view->render();
 	}
 
 	public function widRealtimeAvgD() {
-        $lastMinutes = 2; // Config variable later
-        $lastNData = API::getInstance()->getAvgDl($this->idSite, $lastMinutes, 'traffic_ps');
+		$lastMinutes = 2; // Config variable later
+		$lastNData = API::getInstance()->getAvgDl($this->idSite, $lastMinutes, 'avg_speed');
 
-        $view = new View('@QoS/widRealtimeAvgD');
-        $view->lastMinutes = $lastMinutes;
-        $view->traffic_ps  = $lastNData['avg_speed'];
-        $view->unit         = $lastNData['unit'];
-        $view->refreshAfterXSecs = Config::getInstance()->General['live_widget_refresh_after_seconds'];
+		$view = new View('@QoS/widRealtimeAvgD');
+//        $view->lastMinutes = $lastMinutes;
+//        $view->traffic_ps  = $lastNData['avg_speed'];
+//        $view->unit        = $lastNData['unit'];
+//        $view->refreshAfterXSecs = Config::getInstance()->General['live_widget_refresh_after_seconds'];
 
-        return $view->render();
-    }
+		return $view->render();
+	}
 }

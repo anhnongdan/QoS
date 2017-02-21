@@ -10,12 +10,11 @@ namespace Piwik\Plugins\QoS;
 
 class Widgets extends \Piwik\Plugin\Widgets
 {
-    protected $category = 'Live!';
+	protected $category = 'Live!';
 
-    public function init()
-    {
-        $this->addWidget('QoS_RealTimeCDNThruput', 'widRealtimeThru', array('columns' => array('traffic_ps')));
-//        $this->addWidget('QoS_RealTimeAvgDLSpeed', 'widRealtimeAvgD', array('columns' => array('avg_speed')));
-    }
-
+	public function init()
+	{
+		$this->addWidget('QoS_RealTimeCDNThruput', 'widRealtimeThru', array('columns' => array('traffic_ps')));
+		$this->addWidget('QoS_RealTimeAvgDLSpeed', 'widRealtimeAvgD', array('columns' => array('avg_speed')));
+	}
 }

@@ -1,20 +1,20 @@
-<div id="RealTimeAvgD"></div>
+<div id="realTimeAvgD"></div>
 
 <script type="text/javascript" charset="utf-8">
 $(document).ready(function() {
-    $('#RealTimeAvgD').barometerWidget({
-        interval: 5000,
-        dataUrlParams: {
-            module: 'API',
-            method: 'QoS.getAvgDl',
-            format: 'json',
-            lastMinutes: 2,
-            metric: 'avg_speed',
-            refreshAfterXSecs: 5
-        },
-        label: '{{ "Barometer_VisitTimeInLastNMinutes"|translate }}',
-        valueName: 'average_time',
-        maxValueName: 'maxtime'
-    });
+	$('#realTimeAvgD').gaugeWidget({
+        intervals: 10,
+		dataUrlParams: {
+			module: 'API',
+			method: 'QoS.getAvgDl',
+			format: 'json',
+			lastMinutes: 2,
+			metric: 'avg_speed'
+		},
+		label: 'bps',
+		unit: 'unit',
+		valueName:    'avg_val',
+		maxValueName: 'max_val'
+	});
 });
 </script>

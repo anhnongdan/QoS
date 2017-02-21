@@ -12,7 +12,6 @@ use Piwik\Common;
 use Piwik\DataTable;
 use Piwik\Site;
 use Piwik\Metrics\Formatter;
-use Piwik\API\Request;
 
 /**
  * ExampleUI API is also an example API useful if you are developing a Piwik plugin.
@@ -24,7 +23,6 @@ use Piwik\API\Request;
  */
 class API extends \Piwik\Plugin\API
 {
-	private $config;
 	private $trafficByIsp;
 	private $overview;
 	private $totalSpeedDownload;
@@ -34,8 +32,7 @@ class API extends \Piwik\Plugin\API
 	private $isp;
 	private $country;
 
-	function __construct()
-	{
+	public function __construct() {
 		$this->setOverview();
 		$this->setTraffic();
 		$this->setHttpCode();
@@ -1179,7 +1176,7 @@ class API extends \Piwik\Plugin\API
 			'date'      => "$date_param",
 			'period'    => 'range',
 			'unit'      => 'minute', // range 2 minute
-			'type'      => $metric ? $metric : 'traffic_ps',
+			'type'      => $metric ? $metric : 'avg_speed',
 		);
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
@@ -1201,11 +1198,15 @@ class API extends \Piwik\Plugin\API
 				}
 			}
 		}
-		$split = explode(" ", $graphData['traffic_ps']);
-		$graphData['traffic_ps']    = $split[0];
-		$graphData['unit']          = $split[1];
+		$split = explode(" ", $graphData['avg_speed']);
+		$graphData['avg_val']   = $split[0];
+		$graphData['unit']      = $split[1];
 
-		return $graphData;
+		return array(
+			'avg_val'   => $graphData['avg_val'],
+			'max_val'   => 200,
+			'unit'      => $graphData['unit']
+		);
 	}
 
 	private function apiGetCdnDataMk( $data )
