@@ -8,12 +8,11 @@
 
 namespace Piwik\Plugins\QoS;
 
-use Piwik\API\Request;
 use Piwik\Common;
 use Piwik\Piwik;
 use Piwik\View;
 use Piwik\ViewDataTable\Factory as ViewDataTableFactory;
-
+use Piwik\Config;
 
 class Controller extends \Piwik\Plugin\Controller
 {
@@ -25,8 +24,12 @@ class Controller extends \Piwik\Plugin\Controller
 		$this->setPeriodVariablesView($view);
 
 		$overview       = API::getInstance()->getOverview();
-
-		$view->graphOverview = $this->getGraphOverview(array(), $overview);
+		$graphByMetrics = array();
+		foreach ($overview as $k => $metric) {
+			$_GET['metric'] = $metric;
+			$graphByMetrics[]   = array('title'=>Piwik::translate("QoS_".$metric), 'graph'=>$this->getGraphOverview(array(), array($metric)));
+		}
+		$view->graphByMetrics   = $graphByMetrics;
 
 //		$view->graphHttpCode        = $this->overViewHttpCodeGraph( 'graphPie', array('request_count_200','request_count_204','request_count_206') );
 		// $view->graphOverviewBw      = $this->overViewBandwidthGraph( 'graphVerticalBar', array('traffic_ps') );
@@ -68,21 +71,27 @@ class Controller extends \Piwik\Plugin\Controller
 			}
 		}
 
-		$overview       = API::getInstance()->getOverview();
-
-		$selectableColumns = $overview;
+		$overview   = API::getInstance()->getOverview();
+		$metric     = Common::getRequestVar('metric', false);
+		$selectableColumns = array($overview[ $metric ]);
 
 		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolution');
 
 		$view->config->enable_sort          = false;
+		if ( $metric == 'body_bytes_sent') {
+			$view->config->y_axis_unit = ' Gb';
+		} else {
+			$view->config->y_axis_unit = ' Mb/s';
+		}
 		$view->config->max_graph_elements   = 30;
 		$view->requestConfig->filter_sort_column = 'label';
 		$view->requestConfig->filter_sort_order  = 'asc';
 		$view->requestConfig->disable_generic_filters=true;
-        $view->config->addTranslations(array(
-            'traffic_ps'       => Piwik::translate('QoS_traffic_ps'),
-            'avg_speed'        => Piwik::translate('QoS_avg_speed'),
-        ));
+		$view->config->addTranslations(array(
+			'traffic_ps'        => Piwik::translate('QoS_traffic_ps'),
+			'body_bytes_sent'   => Piwik::translate('QoS_body_bytes_sent'),
+			'avg_speed'         => Piwik::translate('QoS_avg_speed'),
+		));
 
 		// Can not check empty so have to hardcode. F**k me!
 		$view->config->columns_to_display = $defaultColumns;
@@ -129,8 +138,8 @@ class Controller extends \Piwik\Plugin\Controller
 			}
 		}
 
-		$isp    = Common::getRequestVar('isp', false);
-		$traffic   = API::getInstance()->getTraffic();
+		$isp        = Common::getRequestVar('isp', false);
+		$traffic    = API::getInstance()->getTraffic();
 
 		$selectableColumns = $traffic[$isp];
 
@@ -141,14 +150,14 @@ class Controller extends \Piwik\Plugin\Controller
 		$view->requestConfig->filter_sort_column = 'label';
 		$view->requestConfig->filter_sort_order  = 'asc';
 		$view->requestConfig->disable_generic_filters=true;
-        $view->config->addTranslations(array(
-            'isp_traffic_ps_total'       => Piwik::translate('QoS_isp_traffic_ps_total'),
-            'isp_traffic_ps_vnpt'        => Piwik::translate('QoS_isp_traffic_ps_vnpt'),
-            'isp_traffic_ps_vinaphone'   => Piwik::translate('QoS_isp_traffic_ps_vinaphone'),
-            'isp_traffic_ps_viettel'     => Piwik::translate('QoS_isp_traffic_ps_viettel'),
-            'isp_traffic_ps_fpt'         => Piwik::translate('QoS_isp_traffic_ps_fpt'),
-            'isp_traffic_ps_mobiphone'   => Piwik::translate('QoS_isp_traffic_ps_mobiphone'),
-        ));
+		$view->config->addTranslations(array(
+			'isp_traffic_ps_total'       => Piwik::translate('QoS_isp_traffic_ps_total'),
+			'isp_traffic_ps_vnpt'        => Piwik::translate('QoS_isp_traffic_ps_vnpt'),
+			'isp_traffic_ps_vinaphone'   => Piwik::translate('QoS_isp_traffic_ps_vinaphone'),
+			'isp_traffic_ps_viettel'     => Piwik::translate('QoS_isp_traffic_ps_viettel'),
+			'isp_traffic_ps_fpt'         => Piwik::translate('QoS_isp_traffic_ps_fpt'),
+			'isp_traffic_ps_mobiphone'   => Piwik::translate('QoS_isp_traffic_ps_mobiphone'),
+		));
 
 		// Can not check empty so have to hardcode. F**k me!
 		$view->config->columns_to_display = $defaultColumns;
@@ -164,13 +173,13 @@ class Controller extends \Piwik\Plugin\Controller
 		$view = new View('@QoS/sizetraffic');
 
 		$this->setPeriodVariablesView($view);
-        $graphTraffic = array();
+		$graphTraffic = array();
 		$userSpeed = API::getInstance()->getIspSpeedDownload();
 
-        foreach ($userSpeed as $isp => $metrics) {
-            $_GET['isp'] = $isp;
-            $graphTraffic[]   = array('title'=>Piwik::translate("QoS_".$isp), 'graph'=>$this->getEvolutionGraphAvgSpeed(array(), $metrics));
-        }
+		foreach ($userSpeed as $isp => $metrics) {
+			$_GET['isp'] = $isp;
+			$graphTraffic[]   = array('title'=>Piwik::translate("QoS_".$isp), 'graph'=>$this->getEvolutionGraphAvgSpeed(array(), $metrics));
+		}
 		$view->graphTraffic   = $graphTraffic;
 
 		return $view->render();
@@ -185,7 +194,7 @@ class Controller extends \Piwik\Plugin\Controller
 			}
 		}
 
-        $isp    = Common::getRequestVar('isp', false);
+		$isp    = Common::getRequestVar('isp', false);
 		$userSpeed = API::getInstance()->getIspSpeedDownload();
 		$selectableColumns = $userSpeed[$isp];
 
@@ -196,14 +205,14 @@ class Controller extends \Piwik\Plugin\Controller
 		$view->requestConfig->filter_sort_column = 'label';
 		$view->requestConfig->filter_sort_order  = 'asc';
 		$view->requestConfig->disable_generic_filters=true;
-        $view->config->addTranslations(array(
-            'isp_avg_speed_total'       => Piwik::translate('QoS_isp_avg_speed_total'),
-            'isp_avg_speed_vnpt'        => Piwik::translate('QoS_isp_avg_speed_vnpt'),
-            'isp_avg_speed_vinaphone'   => Piwik::translate('QoS_isp_avg_speed_vinaphone'),
-            'isp_avg_speed_viettel'     => Piwik::translate('QoS_isp_avg_speed_viettel'),
-            'isp_avg_speed_fpt'         => Piwik::translate('QoS_isp_avg_speed_fpt'),
-            'isp_avg_speed_mobiphone'   => Piwik::translate('QoS_isp_avg_speed_mobiphone'),
-        ));
+		$view->config->addTranslations(array(
+			'isp_avg_speed_total'       => Piwik::translate('QoS_isp_avg_speed_total'),
+			'isp_avg_speed_vnpt'        => Piwik::translate('QoS_isp_avg_speed_vnpt'),
+			'isp_avg_speed_vinaphone'   => Piwik::translate('QoS_isp_avg_speed_vinaphone'),
+			'isp_avg_speed_viettel'     => Piwik::translate('QoS_isp_avg_speed_viettel'),
+			'isp_avg_speed_fpt'         => Piwik::translate('QoS_isp_avg_speed_fpt'),
+			'isp_avg_speed_mobiphone'   => Piwik::translate('QoS_isp_avg_speed_mobiphone'),
+		));
 
 		if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
 			$view->config->columns_to_display = $defaultColumns;
@@ -212,7 +221,7 @@ class Controller extends \Piwik\Plugin\Controller
 		return $this->renderView($view);
 	}
 
-	public function mnCacheHit()
+	public function mnEdgeHit()
 	{
 		$view = new View('@QoS/cachehit.twig');
 
@@ -222,15 +231,13 @@ class Controller extends \Piwik\Plugin\Controller
 
 		$this->setGeneralVariablesView($view);
 
-		$cacheHitGraphs   = array();
 		$cacheHit         = API::getInstance()->getCacheHit();
-
-		foreach ($cacheHit as $isp => $metrics) {
-			$_GET['isp']        = $isp;
-			$cacheHitGraphs[]   = array('title'=>Piwik::translate("QoS_".$isp), 'graph'=>$this->getGraphCacheHit(array(), $metrics, $isp));
+		$graphs = array();
+		foreach ($cacheHit as $k => $metrics) {
+			$_GET['metric'] = $k;
+			$graphs[]   = array('title'=>Piwik::translate("QoS_".$k), 'graph'=>$this->getGraphCacheHit(array(), array($metrics)));
 		}
-
-		$view->cacheHitGraphs = $cacheHitGraphs;
+		$view->graphs = $graphs;
 
 		return $view->render();
 	}
@@ -259,8 +266,7 @@ class Controller extends \Piwik\Plugin\Controller
 		return $view->render();
 	}
 
-	public function getGraphCacheHit(array $columns = array(), array $defaultColumns = array())
-	{
+	public function getGraphCacheHit(array $columns = array(), array $defaultColumns = array()) {
 		if (empty($columns)) {
 			$columns = Common::getRequestVar('columns', false);
 			if (false !== $columns) {
@@ -268,32 +274,47 @@ class Controller extends \Piwik\Plugin\Controller
 			}
 		}
 
-		$isp        = Common::getRequestVar('isp', false);
 		$cacheHit   = API::getInstance()->getCacheHit();
-//		$selectableColumns = $cacheHit[$isp];
-		$selectableColumns = array('isp_request_count_2xx_total');
+		$metric     = Common::getRequestVar('metric', false);
+		$selectableColumns = $cacheHit[ $metric ];
+		if ( $metric == 'ratio_hit' ) {
+			$selectableColumns = array('ratio_hit');
+		}
+//		$selectableColumns = array('isp_request_count_2xx_total');
+
 		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolutionCacheHit');
 
 		$view->config->enable_sort          = false;
 		$view->config->max_graph_elements   = 30;
 		$view->requestConfig->filter_sort_column = 'label';
 		$view->requestConfig->filter_sort_order  = 'asc';
-		$view->requestConfig->disable_generic_filters=true;
-        $view->config->addTranslations(array(
-            'isp_request_count_2xx_total'       => Piwik::translate('QoS_isp_request_count_2xx_total'),
-            'isp_request_count_2xx_vnpt'        => Piwik::translate('QoS_ispRequestCount2xxVnpt'),
-            'isp_request_count_2xx_vinaphone'   => Piwik::translate('QoS_isp_request_count_2xx_vinaphone'),
-            'isp_request_count_2xx_viettel'     => Piwik::translate('QoS_isp_request_count_2xx_viettel'),
-            'isp_request_count_2xx_fpt'         => Piwik::translate('QoS_isp_request_count_2xx_fpt'),
-            'isp_request_count_2xx_mobiphone'   => Piwik::translate('QoS_isp_request_count_2xx_mobiphone'),
-        ));
+		$view->requestConfig->disable_generic_filters = true;
+		$view->config->addTranslations(array(
+			'isp_request_count_2xx_total'       => Piwik::translate('QoS_TotalHit'),
+			'isp_request_count_2xx_vnpt'        => Piwik::translate('QoS_HitsVnpt'),
+			'isp_request_count_2xx_vinaphone'   => Piwik::translate('QoS_HitsVinaphone'),
+			'isp_request_count_2xx_viettel'     => Piwik::translate('QoS_HitsViettel'),
+			'isp_request_count_2xx_fpt'         => Piwik::translate('QoS_HitsFpt'),
+			'isp_request_count_2xx_mobiphone'   => Piwik::translate('QoS_HitsMobiphone'),
+			'ratio_hit'                         => Piwik::translate('QoS_ratio_hit'),
+		));
 
 		// Can not check empty so have to hardcode. F**k me!
 //		$view->config->columns_to_display = $defaultColumns;
-		$view->config->columns_to_display = array('isp_request_count_2xx_total');
-		 if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-		     $view->config->columns_to_display = $defaultColumns;
-		 }
+//		if ( $metric == 'edge_hit' && empty($columns[ $metric ]) ) {
+//			$view->config->columns_to_display = array('isp_request_count_2xx_total');
+//		} elseif ( $metric == 'ratio_hit' && empty($columns[ $metric ]) ) {
+//			$view->config->columns_to_display = array('ratio_hit');
+//		}
+		if ( $metric == 'edge_hit' && empty($columns[ $metric ]) && !empty($defaultColumns) ) {
+			$view->config->columns_to_display = array('isp_request_count_2xx_total');
+		}
+		if ( $metric == 'ratio_hit' && empty($columns[ $metric ]) && !empty($defaultColumns) ) {
+			$view->config->columns_to_display = array('ratio_hit');
+		}
+		if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+			 $view->config->columns_to_display = $defaultColumns;
+		}
 
 		return $this->renderView($view);
 	}
@@ -338,7 +359,20 @@ class Controller extends \Piwik\Plugin\Controller
 		$view->requestConfig->filter_sort_column = 'label';
 		$view->requestConfig->filter_sort_order  = 'asc';
 		$view->requestConfig->disable_generic_filters=true;
-
+		$view->config->addTranslations(array(
+			'request_count_200'     => Piwik::translate('QoS_Request_200'),
+			'request_count_204'     => Piwik::translate('QoS_Request_204'),
+			'request_count_206'     => Piwik::translate('QoS_Request_206'),
+			'request_count_301'     => Piwik::translate('QoS_Request_301'),
+			'request_count_302'     => Piwik::translate('QoS_Request_302'),
+			'request_count_304'     => Piwik::translate('QoS_Request_306'),
+			'request_count_400'     => Piwik::translate('QoS_Request_400'),
+			'request_count_404'     => Piwik::translate('QoS_Request_404'),
+			'request_count_500'     => Piwik::translate('QoS_Request_500'),
+			'request_count_502'     => Piwik::translate('QoS_Request_502'),
+			'request_count_503'     => Piwik::translate('QoS_Request_503'),
+			'request_count_504'     => Piwik::translate('QoS_Request_504'),
+		));
 		// Can not check empty so have to hardcode. F**k me!
 		$view->config->columns_to_display = $defaultColumns;
 		// if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
@@ -353,16 +387,8 @@ class Controller extends \Piwik\Plugin\Controller
 		$view = new View('@QoS/isp');
 
 		$this->setPeriodVariablesView($view);
-
-		$ispGraphs = array();
-		$isp       = API::getInstance()->getIsp();
-
-		foreach ($isp as $ispName => $metrics) {
-			$_GET['isp'] = $ispName;
-			$ispGraphs[]   = array('title'=>Piwik::translate("QoS_".$ispName), 'graph'=>$this->getGraphIsp(array(), $metrics, $ispName));
-		}
-
-		$view->ispGraphs = $ispGraphs;
+		$traffic = API::getInstance()->getTraffic();
+		$view->graph = $this->getGraphIsp(array(), $traffic);
 
 		return $view->render();
 	}
@@ -376,24 +402,35 @@ class Controller extends \Piwik\Plugin\Controller
 			}
 		}
 
-		$isp            = Common::getRequestVar('isp', false);
-		$ispSetting     = API::getInstance()->getIsp();
+		$traffic = API::getInstance()->getTraffic();
+		$selectableColumns = $traffic;
 
-		$selectableColumns = $ispSetting[$isp];
-
-		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolution');
+		$view = $this->getLastUnitGraphAcrossPlugins($this->pluginName, __FUNCTION__, $columns, $selectableColumns, '', 'QoS.getGraphEvolutionISP');
 
 		$view->config->enable_sort          = false;
 		$view->config->max_graph_elements   = 30;
 		$view->requestConfig->filter_sort_column = 'label';
+		$view->config->y_axis_unit          = ' MB/s';
 		$view->requestConfig->filter_sort_order  = 'asc';
 		$view->requestConfig->disable_generic_filters=true;
-
+		$view->config->addTranslations(array(
+			'isp_traffic_ps_vnpt'       => Piwik::translate('QoS_Vnpt'),
+			'isp_traffic_ps_vinaphone'  => Piwik::translate('QoS_Vinaphone'),
+			'isp_traffic_ps_viettel'    => Piwik::translate('QoS_Viettel'),
+			'isp_traffic_ps_fpt'        => Piwik::translate('QoS_Fpt'),
+			'isp_traffic_ps_mobiphone'  => Piwik::translate('QoS_Mobiphone'),
+			'isp_traffic_ps_total'      => Piwik::translate('QoS_Total'),
+		));
 		// Can not check empty so have to hardcode. F**k me!
-		$view->config->columns_to_display = $defaultColumns;
-		// if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
-		//     $view->config->columns_to_display = $defaultColumns;
-		// }
+		if( empty($columns) ) {
+			$view->config->columns_to_display = array('isp_traffic_ps_total');
+		} else {
+			$view->config->columns_to_display = $defaultColumns;
+		}
+
+		 if (empty($view->config->columns_to_display) && !empty($defaultColumns)) {
+			 $view->config->columns_to_display = $defaultColumns;
+		 }
 
 		return $this->renderView($view);
 	}
@@ -574,4 +611,31 @@ class Controller extends \Piwik\Plugin\Controller
 
 		return $this->renderView($view);
 	}
+
+	public function widRealtimeThru() {
+
+	    $lastMinutes = 2; // Config variable later
+        $lastNData = API::getInstance()->getTraffps($this->idSite, $lastMinutes, 'traffic_ps');
+
+        $view = new View('@QoS/widThruput');
+        $view->lastMinutes = $lastMinutes;
+        $view->traffic_ps  = $lastNData['traffic_ps'];
+        $view->unit         = $lastNData['unit'];
+        $view->refreshAfterXSecs = Config::getInstance()->General['live_widget_refresh_after_seconds'];
+
+        return $view->render();
+	}
+
+	public function widRealtimeAvgD() {
+        $lastMinutes = 2; // Config variable later
+        $lastNData = API::getInstance()->getAvgDl($this->idSite, $lastMinutes, 'traffic_ps');
+
+        $view = new View('@QoS/widRealtimeAvgD');
+        $view->lastMinutes = $lastMinutes;
+        $view->traffic_ps  = $lastNData['avg_speed'];
+        $view->unit         = $lastNData['unit'];
+        $view->refreshAfterXSecs = Config::getInstance()->General['live_widget_refresh_after_seconds'];
+
+        return $view->render();
+    }
 }

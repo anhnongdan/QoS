@@ -1,10 +1,12 @@
 <div class="row">
-	<h2 piwik-enriched-headline data-graph-id="QoS.overviewGraph">{{ 'QoS_Overview'|translate }}</h2>
+	{% for m in graphByMetrics %}
+		<h2 data-graph-id="QoS.overviewGraph">{{ m.title|translate }}</h2>
 
-    {{ graphOverview|raw }}
+		{{ m.graph|raw }}
+	{% endfor %}
 
-	<h2 class="visitsSummaryReportTitle">{{ 'QoS_Report'|translate }}</h2>
-    {% include "@QoS/_sparklines.twig" %}
+	{#<h2 class="visitsSummaryReportTitle">{{ 'QoS_Report'|translate }}</h2>#}
+	{#{% include "@QoS/_sparklines.twig" %}#}
 
 	{#<div class="col-md-6">#}
 		{#<div class="col-md-12">#}

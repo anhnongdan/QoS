@@ -73,10 +73,11 @@ class Settings extends \Piwik\Plugin\Settings
 		$this->overview->type  = static::TYPE_ARRAY;
 		$this->overview->uiControlType = static::CONTROL_MULTI_SELECT;
 		// $this->overview->availableValues  = array();
-		$this->overview->description   = 'The value will be only displayed in the following http code 2xx in only isp';
+		$this->overview->description   = 'The list metrics show on Overview';
 		$this->overview->defaultValue  = array(
-			'traffic_ps',
-            'avg_speed',
+			'traffic_ps'    => 'traffic_ps',
+			'avg_speed'     => 'avg_speed',
+			'body_bytes_sent' => 'body_bytes_sent'
 		);
 		$this->overview->readableByCurrentUser = true;
 
@@ -91,11 +92,11 @@ class Settings extends \Piwik\Plugin\Settings
 		// $this->traffic->availableValues  = array();
 		$this->traffic->description   = 'The value will be only displayed in the following http code 2xx in only isp';
 		$this->traffic->defaultValue  = array(
-			'vnpt'      => array ('isp_traffic_ps_vnpt','isp_traffic_ps_vinaphone'),
-			'viettel'   => array ('isp_traffic_ps_viettel'),
-			'fpt'       => array ('isp_traffic_ps_fpt'),
-			'mobiphone' => array ('isp_traffic_ps_mobiphone'),
-			'total' => array ('isp_traffic_ps_total'),
+            'isp_traffic_ps_vnpt','isp_traffic_ps_vinaphone',
+            'isp_traffic_ps_viettel',
+            'isp_traffic_ps_fpt',
+            'isp_traffic_ps_mobiphone',
+            'isp_traffic_ps_total'
 		);
 		$this->traffic->readableByCurrentUser = true;
 
@@ -128,13 +129,16 @@ class Settings extends \Piwik\Plugin\Settings
 		// $this->cacheHit->availableValues  = array();
 		$this->cacheHit->description   = 'The value will be only displayed in the following http code 2xx in only isp';
 		$this->cacheHit->defaultValue  = array(
-		    'edge hit'     => array(
-                'isp_request_count_2xx_vnpt','isp_request_count_2xx_vinaphone',
-                'isp_request_count_2xx_viettel',
-                'isp_request_count_2xx_fpt',
-                'isp_request_count_2xx_mobiphone',
-                'isp_request_count_2xx_total',
-            ),
+				'edge_hit'  => array(
+					'isp_request_count_2xx_vnpt','isp_request_count_2xx_vinaphone',
+					'isp_request_count_2xx_viettel',
+					'isp_request_count_2xx_fpt',
+					'isp_request_count_2xx_mobiphone',
+					'isp_request_count_2xx_total',
+				),
+				'ratio_hit' => array(
+					'cache_status_HIT','request_count_2xx'
+				)
 		);
 		$this->cacheHit->readableByCurrentUser = true;
 
@@ -144,39 +148,39 @@ class Settings extends \Piwik\Plugin\Settings
 	private function createTotalSpeedDownloadSetting()
 	{
 		$this->totalSpeedDownload        = new SystemSetting('totalSpeedDownload', 'Metrics Average Speed');
-        $this->totalSpeedDownload->type  = static::TYPE_ARRAY;
-        $this->totalSpeedDownload->uiControlType = static::CONTROL_MULTI_SELECT;
+		$this->totalSpeedDownload->type  = static::TYPE_ARRAY;
+		$this->totalSpeedDownload->uiControlType = static::CONTROL_MULTI_SELECT;
 		$this->totalSpeedDownload->description   = 'The value will be only displayed in the following speed download';
-        $this->totalSpeedDownload->defaultValue  = array(
-            'total'     => array(
-                'isp_avg_speed_vnpt','isp_avg_speed_vinaphone',
-                'isp_avg_speed_viettel',
-                'isp_avg_speed_fpt',
-                'isp_avg_speed_viettel_mobiphone'
-            ),
-        );
+		$this->totalSpeedDownload->defaultValue  = array(
+			'total'     => array(
+				'isp_avg_speed_vnpt','isp_avg_speed_vinaphone',
+				'isp_avg_speed_viettel',
+				'isp_avg_speed_fpt',
+				'isp_avg_speed_viettel_mobiphone'
+			),
+		);
 		$this->totalSpeedDownload->readableByCurrentUser = true;
 
 		$this->addSetting($this->totalSpeedDownload);
 	}
 
-    private function createIspSpeedDownloadSetting()
-    {
-        $this->ispSpeedDownload        = new SystemSetting('ispSpeedDownload', 'Metrics of Traffic');
-        $this->ispSpeedDownload->type  = static::TYPE_ARRAY;
-        $this->ispSpeedDownload->uiControlType = static::CONTROL_MULTI_SELECT;
-        $this->ispSpeedDownload->description   = 'The value will be only displayed in the following http code 2xx in only isp';
-        $this->ispSpeedDownload->defaultValue  = array(
-            'vnpt'      => array ('isp_avg_speed_vnpt','isp_avg_speed_vinaphone'),
-            'viettel'   => array ('isp_avg_speed_viettel'),
-            'fpt'       => array ('isp_avg_speed_fpt'),
-            'mobiphone' => array ('isp_avg_speed_mobiphone'),
-            'total'     => array ('isp_avg_speed_total')
-        );
-        $this->ispSpeedDownload->readableByCurrentUser = true;
+	private function createIspSpeedDownloadSetting()
+	{
+		$this->ispSpeedDownload        = new SystemSetting('ispSpeedDownload', 'Metrics of Traffic');
+		$this->ispSpeedDownload->type  = static::TYPE_ARRAY;
+		$this->ispSpeedDownload->uiControlType = static::CONTROL_MULTI_SELECT;
+		$this->ispSpeedDownload->description   = 'The value will be only displayed in the following http code 2xx in only isp';
+		$this->ispSpeedDownload->defaultValue  = array(
+			'vnpt'      => array ('isp_avg_speed_vnpt','isp_avg_speed_vinaphone'),
+			'viettel'   => array ('isp_avg_speed_viettel'),
+			'fpt'       => array ('isp_avg_speed_fpt'),
+			'mobiphone' => array ('isp_avg_speed_mobiphone'),
+			'total'     => array ('isp_avg_speed_total')
+		);
+		$this->ispSpeedDownload->readableByCurrentUser = true;
 
-        $this->addSetting($this->ispSpeedDownload);
-    }
+		$this->addSetting($this->ispSpeedDownload);
+	}
 
 	private function createIspSetting()
 	{
