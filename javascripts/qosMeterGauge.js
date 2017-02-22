@@ -46,23 +46,25 @@
 			function drawGaugePlot(current, max, unit) {
 				var intervals = [5,max];
 				if(gaugePlot) {
-					gaugePlot.destroy();
+					// gaugePlot.destroy();
 				}
 				console.log(current+' '+unit+settings.label, max);
-				gaugePlot = $.jqplot(gaugeWidget.id,[[current]],{
-					seriesDefaults: {
-						renderer: $.jqplot.MeterGaugeRenderer,
-						rendererOptions: {
-							label: current+' '+unit+settings.label,
-							labelPosition: 'inside',
-							intervalOuterRadius: 85,
-							intervals: intervals,
-							intervalColors:['#cc6666', '#66cc66'],
-							min: 0,
-							max: max
+				if(!gaugePlot) {
+					gaugePlot = $.jqplot(gaugeWidget.id,[[current]],{
+						seriesDefaults: {
+							renderer: $.jqplot.MeterGaugeRenderer,
+							rendererOptions: {
+								label: current+' '+unit+settings.label,
+								labelPosition: 'inside',
+								intervalOuterRadius: 85,
+								intervals: intervals,
+								intervalColors:['#cc6666', '#66cc66'],
+								min: 0,
+								max: max
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 			/**
 			 * Triggers an update for the widget

@@ -1,8 +1,8 @@
-.realtime-thruput-widget {
+.realtime-thruput-widget, .realtime-avg-widget {
 	text-align: center;
 }
 
-.realtime-thruput-counter {
+.realtime-thruput-counter, .realtime-avg-counter {
 	background-color: #F1F0EB;
 	border-radius: 10px;
 	display: inline-flex;
@@ -10,12 +10,12 @@
 	padding: 3em;
 }
 
-.realtime-thruput-counter > div {
+.realtime-thruput-counter > div, .realtime-avg-counter > div {
 	font-size: 4.0em;
 	color: #444;
 }
 
-.realtime-thruput-counter > span {
+.realtime-thruput-counter > span, .realtime-avg-counter > span {
 	margin-top: 15px;
 }
 

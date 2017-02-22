@@ -627,7 +627,15 @@ class Controller extends \Piwik\Plugin\Controller
 
 	public function widRealtimeAvgD() {
 
-		$view = new View('@QoS/widRealtimeAvgD');
-		return $view->render();
+        $lastMinutes = 2; // Config variable later
+        $lastNData = API::getInstance()->getAvgDl($this->idSite, $lastMinutes, 'avg_speed');
+
+        $view = new View('@QoS/widRealtimeAvgD');
+        $view->lastMinutes = $lastMinutes;
+        $view->avg_speed  = $lastNData['avg_speed'];
+        $view->unit         = $lastNData['unit'];
+        $view->refreshAfterXSecs = Config::getInstance()->General['live_widget_refresh_after_seconds'];
+
+        return $view->render();
 	}
 }

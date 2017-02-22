@@ -22,12 +22,12 @@ class QoS extends \Piwik\Plugin
 
 	public function getStylesheetFiles(&$stylesheets)
 	{
-		$stylesheets[] = "plugins/QoS/stylesheets/qos.less";
+		$stylesheets[] = "plugins/QoS/stylesheets/qos.css";
 	}
 
 	public function getJavaScriptFiles(&$files)
 	{
-//		$files[] = 'plugins/QoS/javascripts/jquery.jqplot.min.js';
+//		$files[] = 'plugins/QoS/javascripts/jquery.jqplot.js';
 //		$files[] = 'plugins/QoS/javascripts/jqplot.meterGaugeRenderer.js';
 //		$files[] = 'plugins/QoS/javascripts/qosMeterGauge.js';
 		$files[] = 'plugins/QoS/javascripts/qos.js';
