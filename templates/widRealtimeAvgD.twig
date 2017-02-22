@@ -1,5 +1,9 @@
 <div id="realTimeAvgD"></div>
+<div style="text-align: center; margin-top: -20px;padding-bottom: 8px;">in the last <span class="simple-realtime-metric" data-metric="minutes">2 minutes</span></div>
 
+<script src="plugins/QoS/javascripts/jquery.jqplot.min.js"></script>
+<script src="plugins/QoS/javascripts/jqplot.meterGaugeRenderer.js"></script>
+<script src="plugins/QoS/javascripts/qosMeterGauge.js"></script>
 <script type="text/javascript" charset="utf-8">
 $(document).ready(function() {
 	$('#realTimeAvgD').gaugeWidget({

@@ -48,7 +48,7 @@
 				if(gaugePlot) {
 					gaugePlot.destroy();
 				}
-				console.log(current+' '+unit+settings.label);
+				console.log(current+' '+unit+settings.label, max);
 				gaugePlot = $.jqplot(gaugeWidget.id,[[current]],{
 					seriesDefaults: {
 						renderer: $.jqplot.MeterGaugeRenderer,

@@ -1204,7 +1204,7 @@ class API extends \Piwik\Plugin\API
 
 		return array(
 			'avg_val'   => $graphData['avg_val'],
-			'max_val'   => 200,
+			'max_val'   => ($graphData['avg_val'] <= 10)?150:$graphData['avg_val']*1.5,
 			'unit'      => $graphData['unit']
 		);
 	}
