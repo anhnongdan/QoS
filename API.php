@@ -130,7 +130,7 @@ class API extends \Piwik\Plugin\API
 		$idSite = Common::getRequestVar('idSite', 1);
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$now = date("Y-m-d H:i:s");
 
@@ -183,7 +183,7 @@ class API extends \Piwik\Plugin\API
 		$idSite = Common::getRequestVar('idSite', 1);
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$lastMinutes = 2;
 		$now = time();
@@ -228,7 +228,7 @@ class API extends \Piwik\Plugin\API
 		$idSite = Common::getRequestVar('idSite', 1);
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
@@ -269,7 +269,7 @@ class API extends \Piwik\Plugin\API
 		$idSite = Common::getRequestVar('idSite', 1);
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
@@ -311,7 +311,7 @@ class API extends \Piwik\Plugin\API
 
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
@@ -359,7 +359,7 @@ class API extends \Piwik\Plugin\API
 
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$date_param = date("Y-m-d H:i:s").",".date("Y-m-d H:i:s");
 		$params = array(
@@ -403,7 +403,7 @@ class API extends \Piwik\Plugin\API
 	{
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
@@ -469,7 +469,7 @@ class API extends \Piwik\Plugin\API
 	{
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn = explode("//",$nameCdn)[1];
+		$nameCdn = explode("//",$nameCdn)[1];
 
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
@@ -591,7 +591,7 @@ class API extends \Piwik\Plugin\API
 	{
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn = explode("//",$nameCdn)[1];
+		$nameCdn = explode("//",$nameCdn)[1];
 
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
@@ -601,50 +601,99 @@ class API extends \Piwik\Plugin\API
 		$dates      = explode(",", $date);
 
 		if (!$columns) {
-			$columns = Common::getRequestVar('columns', false);
-			if (!$columns && $module == 'QoS' && $action == 'mnEdgeHit') {
-				if ( $metric ){
-					$columns = $this->cacheHit[ $metric ];
-				} else {
-					$columns = array();
-					$columns[] = implode(",",$this->cacheHit);
-				}
-			}
+            $columns = Common::getRequestVar('columns', false);
+            if (!$columns ) {
+                if ( $metric ){
+                    $columns = current(array_keys($this->cacheHit[ $metric ]));
+                } else {
+                    foreach ($this->cacheHit as $m) {
+                        foreach ($m as $k => $v){
+                            $columns[] = $k;
+                        }
+                    }
+                }
+            }
+		}
+		$colArr = array();
+		if ($metric == 'ratio_hit') {
+            if ( !is_array($columns) ) {
+                $columns = explode(",",$columns);
+            }
+			$colArr = $columns;
 		}
 
 		if ( is_array($columns) ) {
-			if (in_array('isp_request_count_2xx_total', $columns)) {
-				$columns = array_diff($columns, array('isp_request_count_2xx_total'));
-			}
 			$columns = implode(",",$columns);
 		}
 
-		if ( strrpos( $columns, 'isp_request_count_2xx_total') ) {
-			$columns = explode(",",$columns);
-			$columns = array_diff($columns, array('isp_request_count_2xx_total'));
-			$columns = implode(",",$columns);
-		}
+		$graphData  = array();
+		/*
+		 * List metric to call api, always full
+		 */
+		if ( $metric == 'edge_hit' ) {
+			$colList = array_diff($this->cacheHit[ $metric ], array('isp_request_count_2xx_total'));
+			$colList = implode(",", $colList);
 
-		$columns2 = $this->cacheHit[ $metric ];
-		if ( is_array($columns2) ) {
-			if (in_array('isp_request_count_2xx_total', $columns2)) {
-				$columns2 = array_diff($columns2, array('isp_request_count_2xx_total'));
+			$params = array(
+				'name'      => $nameCdn,
+				'date'      => ($typePeriod == 'range') ? $date : $dates[1],
+				'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
+				'unit'      => $period,
+				'type'      => $colList
+			);
+			$dataCustomer = $this->apiGetCdnDataMk($params);
+			$dataCustomer = json_decode($dataCustomer, true);
+
+			if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+			{
+				foreach ( $dataCustomer['data'] as $valueOfCdn )
+				{
+					// Name of Cdn: $valueOfCdn['name']
+					foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+					{
+						// Type request: valueOfTypeRequest['type']
+						foreach ( $valueOfTypeRequest['value'] as $valueByTime ) {
+							$keyName = array_search($valueOfTypeRequest['type'], $this->cacheHit[ $metric ]);
+							if ( strpos($columns,$keyName) !== false ) {
+								$graphData[$valueByTime['name']][ $keyName ] = (int)$valueByTime['value'];
+							}
+							if (isset($graphData[$valueByTime['name']]['hit_total'])) {
+								$graphData[$valueByTime['name']]['hit_total'] += (int)$valueByTime['value'];
+							} else {
+								$graphData[$valueByTime['name']]['hit_total'] = (int)$valueByTime['value'];
+							}
+						}
+					}
+				}
 			}
-			$columns2 = implode(",",$columns2);
-		}
 
-		$params = array(
-			'name'      => $nameCdn,
-			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
-			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
-			'unit'      => $period,
-			'type'      => $columns2
-		);
+		} elseif ( $metric == 'ratio_hit' ) {
+
+			foreach ($colArr as $c) {
+				$colList = $this->cacheHit[ $metric ][ $c ];
+				$params = array(
+					'name'      => $nameCdn,
+					'date'      => ($typePeriod == 'range') ? $date : $dates[1],
+					'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
+					'unit'      => $period,
+					'type'      => $colList
+				);
+				$reRatio = $this->comRatioHit($params,$c,explode(",",$colList));
+
+                $graphData = array_merge_recursive($graphData,$reRatio);
+			}
+		}
+		ksort($graphData);
+
+		return DataTable::makeFromIndexedArray($graphData);
+	}
+
+	private function comRatioHit($params, $label, $colArr) {
 
 		$dataCustomer = $this->apiGetCdnDataMk($params);
 		$dataCustomer = json_decode($dataCustomer, true);
 
-		$graphData  = array();
+		$result = array();
 		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
 		{
 			foreach ( $dataCustomer['data'] as $valueOfCdn )
@@ -652,41 +701,33 @@ class API extends \Piwik\Plugin\API
 				// Name of Cdn: $valueOfCdn['name']
 				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
 				{
-					// Type request: valueOfTypeRequest['type']
-					foreach ( $valueOfTypeRequest['value'] as $valueByTime ) {
-						if ( $metric == 'edge_hit') {
-							if (strpos($columns, $valueOfTypeRequest['type']) !== false) {
-								$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = (int)$valueByTime['value'];
-							}
-							if (isset($graphData[$valueByTime['name']]['isp_request_count_2xx_total'])) {
-								$graphData[$valueByTime['name']]['isp_request_count_2xx_total'] += (int)$valueByTime['value'];
-							} else {
-								$graphData[$valueByTime['name']]['isp_request_count_2xx_total'] = (int)$valueByTime['value'];
-							}
+					foreach ($valueOfTypeRequest['value'] as $valueByTime)
+					{
+						if (isset($result[$valueByTime['type']][ $valueOfTypeRequest['type'] ])) {
+							$result[$valueByTime['name']][ $valueOfTypeRequest['type'] ] += (int)$valueByTime['value'];
 						} else {
-							$graphData[$valueByTime['name']]['ratio_hit'][$valueOfTypeRequest['type']] = (int)$valueByTime['value'];
+							$result[$valueByTime['name']][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
 						}
 					}
 				}
 			}
 		}
-		if ( $metric == 'ratio_hit') {
-			foreach ($graphData as $d => $v) {
-				$t = ($v['ratio_hit']['cache_status_HIT']/$v['ratio_hit']['request_count_2xx']);
-				$graphData[ $d ]['ratio_hit'] = $t * 100;
-			}
+
+		$arrTmp = array();
+        foreach ($result as $date => $val) {
+            $t = round($val[ $colArr[0] ]/( $val[ $colArr[1] ] + $val[ $colArr[2] ] ), 2);
+            $arrTmp[ $date ][ $label ] = $t;
 		}
+		$result = $arrTmp;
 
-		ksort($graphData);
-
-		return DataTable::makeFromIndexedArray($graphData);
+		return $result;
 	}
 
 	public function getGraphEvolutionISP($idSite, $date, $period, $columns = false)
 	{
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
@@ -766,7 +807,7 @@ class API extends \Piwik\Plugin\API
 	{
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
@@ -832,7 +873,7 @@ class API extends \Piwik\Plugin\API
 	{
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$module = Common::getRequestVar('module', false);
 		$action = Common::getRequestVar('action', false);
@@ -1079,7 +1120,7 @@ class API extends \Piwik\Plugin\API
 
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$now = time();
 		$before_3mins = $now - ($lastMinutes * 60);
@@ -1136,7 +1177,7 @@ class API extends \Piwik\Plugin\API
 		}
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		$nameCdn    = explode("//",$nameCdn)[1];
 
 		$date_param = $lastTime.",".$lastTime;
 		$params = array(
@@ -1174,50 +1215,50 @@ class API extends \Piwik\Plugin\API
 	}
 
 	public function getAvgDl($idSite, $lastMinutes, $metric) {
-        $now = date("Y-m-d H:i:s");
-        $time = strtotime($now) - ($lastMinutes * 60);
-        $lastTime = date("Y-m-d H:i:s", $time);
+		$now = date("Y-m-d H:i:s");
+		$time = strtotime($now) - ($lastMinutes * 60);
+		$lastTime = date("Y-m-d H:i:s", $time);
 
-        if(!$idSite) {
-            $idSite = Common::getRequestVar('idSite', 1);
-        }
-        $cdnObj     = new Site($idSite);
-        $nameCdn    = $cdnObj->getMainUrl();
-        $nameCdn    = explode("//",$nameCdn)[1];
+		if(!$idSite) {
+			$idSite = Common::getRequestVar('idSite', 1);
+		}
+		$cdnObj     = new Site($idSite);
+		$nameCdn    = $cdnObj->getMainUrl();
+		$nameCdn    = explode("//",$nameCdn)[1];
 
-        $date_param = $lastTime.",".$lastTime;
-        $params = array(
-            'name'      => $nameCdn,
-            'date'      => "$date_param",
-            'period'    => 'range',
-            'unit'      => 'minute', // range 2 minute
-            'type'      => $metric ? $metric : 'avg_speed',
-        );
+		$date_param = $lastTime.",".$lastTime;
+		$params = array(
+			'name'      => $nameCdn,
+			'date'      => "$date_param",
+			'period'    => 'range',
+			'unit'      => 'minute', // range 2 minute
+			'type'      => $metric ? $metric : 'avg_speed',
+		);
 
-        $dataCustomer = $this->apiGetCdnDataMk($params);
-        $dataCustomer = json_decode($dataCustomer, true);
+		$dataCustomer = $this->apiGetCdnDataMk($params);
+		$dataCustomer = json_decode($dataCustomer, true);
 
-        $format = new Formatter();
-        if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-        {
-            foreach ( $dataCustomer['data'] as $valueOfCdn )
-            {
-                // Name of Cdn: $valueOfCdn['name']
-                foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-                {
-                    // Type request: valueOfTypeRequest['type']
-                    foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-                    {
-                        $graphData[ $valueOfTypeRequest['type'] ] = $format->getPrettySizeFromBytes((int)$valueByTime['value']);
-                    }
-                }
-            }
-        }
-        $split = explode(" ", $graphData['avg_speed']);
-        $graphData['avg_speed']    = $split[0];
-        $graphData['unit']         = $split[1];
+		$format = new Formatter();
+		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
+		{
+			foreach ( $dataCustomer['data'] as $valueOfCdn )
+			{
+				// Name of Cdn: $valueOfCdn['name']
+				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
+				{
+					// Type request: valueOfTypeRequest['type']
+					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
+					{
+						$graphData[ $valueOfTypeRequest['type'] ] = $format->getPrettySizeFromBytes((int)$valueByTime['value']);
+					}
+				}
+			}
+		}
+		$split = explode(" ", $graphData['avg_speed']);
+		$graphData['avg_speed']    = $split[0];
+		$graphData['unit']         = $split[1];
 
-        return $graphData;
+		return $graphData;
 	}
 
 	private function apiGetCdnDataMk( $data )

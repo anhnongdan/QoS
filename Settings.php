@@ -92,11 +92,12 @@ class Settings extends \Piwik\Plugin\Settings
 		// $this->traffic->availableValues  = array();
 		$this->traffic->description   = 'The value will be only displayed in the following http code 2xx in only isp';
 		$this->traffic->defaultValue  = array(
-            'isp_traffic_ps_vnpt','isp_traffic_ps_vinaphone',
-            'isp_traffic_ps_viettel',
-            'isp_traffic_ps_fpt',
-            'isp_traffic_ps_mobiphone',
-            'isp_traffic_ps_total'
+			'isp_traffic_ps_total',
+			'isp_traffic_ps_vnpt',
+			'isp_traffic_ps_vinaphone',
+			'isp_traffic_ps_viettel',
+			'isp_traffic_ps_fpt',
+			'isp_traffic_ps_mobiphone'
 		);
 		$this->traffic->readableByCurrentUser = true;
 
@@ -126,18 +127,24 @@ class Settings extends \Piwik\Plugin\Settings
 		$this->cacheHit        = new SystemSetting('cacheHit', 'Metrics Cache Hit');
 		$this->cacheHit->type  = static::TYPE_ARRAY;
 		$this->cacheHit->uiControlType = static::CONTROL_MULTI_SELECT;
-		// $this->cacheHit->availableValues  = array();
+//		 $this->cacheHit->availableValues  = array();
 		$this->cacheHit->description   = 'The value will be only displayed in the following http code 2xx in only isp';
 		$this->cacheHit->defaultValue  = array(
 				'edge_hit'  => array(
-					'isp_request_count_2xx_vnpt','isp_request_count_2xx_vinaphone',
-					'isp_request_count_2xx_viettel',
-					'isp_request_count_2xx_fpt',
-					'isp_request_count_2xx_mobiphone',
-					'isp_request_count_2xx_total',
+					'hit_total' => 'isp_request_count_2xx_total',
+					'hit_vnpt'  => 'isp_request_count_2xx_vnpt',
+					'hit_vinaphone' => 'isp_request_count_2xx_vinaphone',
+					'hit_viettel'   => 'isp_request_count_2xx_viettel',
+					'hit_fpt'       => 'isp_request_count_2xx_fpt',
+					'hit_mobiphone' => 'isp_request_count_2xx_mobiphone',
 				),
 				'ratio_hit' => array(
-					'cache_status_HIT','request_count_2xx'
+					'ratio_total' => 'cache_status_HIT,request_count_200,request_count_206',
+					'ratio_vnpt'  => 'isp_cache_status_HIT_vnpt,isp_request_count_200_vnpt,isp_request_count_206_vnpt',
+					'ratio_fpt'   => 'isp_cache_status_HIT_fpt,isp_request_count_200_fpt,isp_request_count_206_fpt',
+					'ratio_viettel'   => 'isp_cache_status_HIT_viettel,isp_request_count_200_viettel,isp_request_count_206_viettel',
+					'ratio_mobiphone' => 'isp_cache_status_HIT_mobiphone,isp_request_count_200_mobiphone,isp_request_count_206_mobiphone',
+					'ratio_vinaphone' => 'isp_cache_status_HIT_vinaphone,isp_request_count_200_vinaphone,isp_request_count_206_vinaphone',
 				)
 		);
 		$this->cacheHit->readableByCurrentUser = true;
@@ -171,11 +178,11 @@ class Settings extends \Piwik\Plugin\Settings
 		$this->ispSpeedDownload->uiControlType = static::CONTROL_MULTI_SELECT;
 		$this->ispSpeedDownload->description   = 'The value will be only displayed in the following http code 2xx in only isp';
 		$this->ispSpeedDownload->defaultValue  = array(
+			'total'     => array ('isp_avg_speed_total'),
 			'vnpt'      => array ('isp_avg_speed_vnpt','isp_avg_speed_vinaphone'),
 			'viettel'   => array ('isp_avg_speed_viettel'),
 			'fpt'       => array ('isp_avg_speed_fpt'),
 			'mobiphone' => array ('isp_avg_speed_mobiphone'),
-			'total'     => array ('isp_avg_speed_total')
 		);
 		$this->ispSpeedDownload->readableByCurrentUser = true;
 
