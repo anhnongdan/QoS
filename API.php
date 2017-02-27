@@ -716,7 +716,7 @@ class API extends \Piwik\Plugin\API
 		$arrTmp = array();
         foreach ($result as $date => $val) {
             $t = round($val[ $colArr[0] ]/( $val[ $colArr[1] ] + $val[ $colArr[2] ] ), 2);
-            $arrTmp[ $date ][ $label ] = $t;
+            $arrTmp[ $date ][ $label ] = $t * 100;
 		}
 		$result = $arrTmp;
 
