@@ -601,24 +601,24 @@ class API extends \Piwik\Plugin\API
 		$dates      = explode(",", $date);
 
 		if (!$columns) {
-            $columns = Common::getRequestVar('columns', false);
-            if (!$columns ) {
-                if ( $metric ){
-                    $columns = current(array_keys($this->cacheHit[ $metric ]));
-                } else {
-                    foreach ($this->cacheHit as $m) {
-                        foreach ($m as $k => $v){
-                            $columns[] = $k;
-                        }
-                    }
-                }
-            }
+			$columns = Common::getRequestVar('columns', false);
+			if (!$columns ) {
+				if ( $metric ){
+					$columns = current(array_keys($this->cacheHit[ $metric ]));
+				} else {
+					foreach ($this->cacheHit as $m) {
+						foreach ($m as $k => $v){
+							$columns[] = $k;
+						}
+					}
+				}
+			}
 		}
 		$colArr = array();
 		if ($metric == 'ratio_hit') {
-            if ( !is_array($columns) ) {
-                $columns = explode(",",$columns);
-            }
+			if ( !is_array($columns) ) {
+				$columns = explode(",",$columns);
+			}
 			$colArr = $columns;
 		}
 
@@ -680,7 +680,7 @@ class API extends \Piwik\Plugin\API
 				);
 				$reRatio = $this->comRatioHit($params,$c,explode(",",$colList));
 
-                $graphData = array_merge_recursive($graphData,$reRatio);
+				$graphData = array_merge_recursive($graphData,$reRatio);
 			}
 		}
 		ksort($graphData);
@@ -714,9 +714,9 @@ class API extends \Piwik\Plugin\API
 		}
 
 		$arrTmp = array();
-        foreach ($result as $date => $val) {
-            $t = round($val[ $colArr[0] ]/( $val[ $colArr[1] ] + $val[ $colArr[2] ] ), 2);
-            $arrTmp[ $date ][ $label ] = $t * 100;
+		foreach ($result as $date => $val) {
+			$t = round($val[ $colArr[0] ]/( $val[ $colArr[1] ] + $val[ $colArr[2] ] ), 2);
+			$arrTmp[ $date ][ $label ] = $t * 100;
 		}
 		$result = $arrTmp;
 
@@ -1263,9 +1263,8 @@ class API extends \Piwik\Plugin\API
 
 	private function apiGetCdnDataMk( $data )
 	{
-		// $url = 'http://172.16.64.169:8001';
-		$url = 'http://113.164.27.58:8001';
-		// $url = 'http://127.0.0.1:8001';
+		$url = 'http://125.212.200.247:8001';
+		
 		$data['path'] = '/api/v1/stat';
 
 		$query = $data['path']."?name=".$data['name']."&date=".$data['date']."&period=".$data['period']."&unit=".$data['unit']."&type=".$data['type'];
