@@ -11,5 +11,8 @@
 			"email"     : "vutp@saobacdau.vn",
 			"homepage"  : "http://sbddigital.com"
 		}
-	]
+	],
+	"require": {
+		"piwik": ">=2.16.0,<3.0.0-b1"
+	}
 }

@@ -33,6 +33,13 @@ class API extends \Piwik\Plugin\API
 	private $country;
 
 	public function __construct() {
+		$timezone = Site::getTimezoneFor( Common::getRequestVar('idSite', 1) );
+		if ( $timezone ) {
+			date_default_timezone_set( $timezone );
+		} else {
+			date_default_timezone_set('Asia/Ho_Chi_Minh');
+		}
+
 		$this->setOverview();
 		$this->setTraffic();
 		$this->setHttpCode();
@@ -1263,8 +1270,8 @@ class API extends \Piwik\Plugin\API
 
 	private function apiGetCdnDataMk( $data )
 	{
-		$url = 'http://125.212.200.247:8001';
-		
+//		$url = 'http://125.212.200.247:8001';
+		$url = 'http://113.164.27.58:8001';
 		$data['path'] = '/api/v1/stat';
 
 		$query = $data['path']."?name=".$data['name']."&date=".$data['date']."&period=".$data['period']."&unit=".$data['unit']."&type=".$data['type'];

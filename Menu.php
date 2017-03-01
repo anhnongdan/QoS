@@ -16,7 +16,7 @@ class Menu extends \Piwik\Plugin\Menu
 {
 	public function configureReportingMenu(MenuReporting $menu)
 	{
-		if (!Piwik::hasUserSuperUserAccess()) return;
+		if (!Piwik::isUserHasSomeViewAccess()) return;
 
 		$menu->registerMenuIcon(Piwik::translate('QoS_QoS'), 'icon-chart-bar');
 		$menu->addItem(Piwik::translate('QoS_QoS'), '', array(), 20);

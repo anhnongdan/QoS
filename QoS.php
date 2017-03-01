@@ -8,7 +8,6 @@
 
 namespace Piwik\Plugins\QoS;
 
-require_once PIWIK_INCLUDE_PATH . '/plugins/QoS/functions.php';
 
 class QoS extends \Piwik\Plugin
 {
@@ -33,13 +32,13 @@ class QoS extends \Piwik\Plugin
 		$files[] = 'plugins/QoS/javascripts/qos.js';
 	}
 
-    public function extendVisitorDetails(&$visitor, $details)
-    {
-        $instance = new Visitor($details);
-        $visitor['browser']                  = $instance->getBrowser();
-        $visitor['browserName']              = $instance->getBrowserName();
-        $visitor['browserIcon']              = $instance->getBrowserIcon();
-        $visitor['browserCode']              = $instance->getBrowserCode();
-        $visitor['browserVersion']           = $instance->getBrowserVersion();
-    }
+	public function extendVisitorDetails(&$visitor, $details)
+	{
+		$instance = new Visitor($details);
+		$visitor['browser']                  = $instance->getBrowser();
+		$visitor['browserName']              = $instance->getBrowserName();
+		$visitor['browserIcon']              = $instance->getBrowserIcon();
+		$visitor['browserCode']              = $instance->getBrowserCode();
+		$visitor['browserVersion']           = $instance->getBrowserVersion();
+	}
 }
