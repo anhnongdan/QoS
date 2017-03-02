@@ -1,10 +1,4 @@
 <?php
-/**
- * Piwik - free/libre analytics platform
- *
- * @link http://piwik.org
- * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
- */
 
 namespace Piwik\Plugins\QoS;
 
@@ -23,14 +17,44 @@ use Piwik\Metrics\Formatter;
  */
 class API extends \Piwik\Plugin\API
 {
-	private $trafficByIsp;
-	private $overview;
-	private $totalSpeedDownload;
-	private $ispSpeedDownload;
-	private $cacheHit;
-	private $httpCode;
-	private $isp;
-	private $country;
+	private $overview = array(
+		'traffic_ps'    => 'traffic_ps',
+		'avg_speed'     => 'avg_speed',
+		'body_bytes_sent' => 'body_bytes_sent'
+	);
+	private $traffic = array(
+		'isp_traffic_ps_total',
+		'isp_traffic_ps_vnpt',
+		'isp_traffic_ps_vinaphone',
+		'isp_traffic_ps_viettel',
+		'isp_traffic_ps_fpt',
+		'isp_traffic_ps_mobiphone'
+	);
+	private $cacheHit = array(
+		'edge_hit'  => array(
+			'hit_total' => 'isp_request_count_2xx_total',
+			'hit_vnpt'  => 'isp_request_count_2xx_vnpt',
+			'hit_vinaphone' => 'isp_request_count_2xx_vinaphone',
+			'hit_viettel'   => 'isp_request_count_2xx_viettel',
+			'hit_fpt'       => 'isp_request_count_2xx_fpt',
+			'hit_mobiphone' => 'isp_request_count_2xx_mobiphone',
+		),
+		'ratio_hit' => array(
+			'ratio_total' => 'cache_status_HIT,request_count_200,request_count_206',
+			'ratio_vnpt'  => 'isp_cache_status_HIT_vnpt,isp_request_count_200_vnpt,isp_request_count_206_vnpt',
+			'ratio_fpt'   => 'isp_cache_status_HIT_fpt,isp_request_count_200_fpt,isp_request_count_206_fpt',
+			'ratio_viettel'   => 'isp_cache_status_HIT_viettel,isp_request_count_200_viettel,isp_request_count_206_viettel',
+			'ratio_mobiphone' => 'isp_cache_status_HIT_mobiphone,isp_request_count_200_mobiphone,isp_request_count_206_mobiphone',
+			'ratio_vinaphone' => 'isp_cache_status_HIT_vinaphone,isp_request_count_200_vinaphone,isp_request_count_206_vinaphone',
+		)
+	);
+
+	private $httpCode = array(
+		'2xx'   => array('request_count_200','request_count_204','request_count_206'),
+		'3xx'   => array('request_count_301','request_count_302','request_count_304'),
+		'4xx'   => array('request_count_400','request_count_404'),
+		'5xx'   => array('request_count_500','request_count_502','request_count_503','request_count_504')
+	);
 
 	public function __construct() {
 		$timezone = Site::getTimezoneFor( Common::getRequestVar('idSite', 1) );
@@ -39,95 +63,23 @@ class API extends \Piwik\Plugin\API
 		} else {
 			date_default_timezone_set('Asia/Ho_Chi_Minh');
 		}
-
-		$this->setOverview();
-		$this->setTraffic();
-		$this->setHttpCode();
-		$this->setCacheHit();
-		$this->setTotalSpeedDownload();
-		$this->setIspSpeedDownload();
-		$this->setIsp();
-		$this->setCountry();
 	}
 
 	public function getOverview() {
 		return $this->overview;
 	}
 
-	private function setOverview()
-	{
-		$overview = new Settings('QoS');
-		$this->overview = $overview->overview->getValue();
-	}
-
 	public function getTraffic() {
-		return $this->trafficByIsp;
+		return $this->traffic;
 	}
 
-	private function setTraffic()
-	{
-		$traffic = new Settings('QoS');
-		$this->trafficByIsp = $traffic->traffic->getValue();
-	}
 
 	public function getHttpCode() {
 		return $this->httpCode;
 	}
 
-	private function setHttpCode()
-	{
-		$httpCode = new Settings('QoS');
-		$this->httpCode = $httpCode->httpCode->getValue();
-	}
-
 	public function getCacheHit() {
 		return $this->cacheHit;
-	}
-
-	private function setCacheHit()
-	{
-		$cacheHitSetting = new Settings('cacheHit');
-		$this->cacheHit = $cacheHitSetting->cacheHit->getValue();
-	}
-
-	public function getTotalSpeedDownload() {
-		return $this->totalSpeedDownload;
-	}
-
-	private function setTotalSpeedDownload()
-	{
-		$totalSpeedDowload = new Settings('totalSpeedDownload');
-		$this->totalSpeedDownload  = $totalSpeedDowload->totalSpeedDownload->getValue();
-	}
-
-	public function getIspSpeedDownload() {
-		return $this->ispSpeedDownload;
-	}
-
-	private function setIspSpeedDownload()
-	{
-		$ispSpeedDowload            = new Settings('ispSpeedDownload');
-		$this->ispSpeedDownload     = $ispSpeedDowload->ispSpeedDownload->getValue();
-	}
-
-	public function getIsp() {
-		return $this->isp;
-	}
-
-	private function setIsp()
-	{
-		$ispSetting = new Settings('isp');
-		$this->isp  = $ispSetting->isp->getValue();
-	}
-
-	public function getCountry() {
-		return $this->country;
-	}
-
-	private function setCountry()
-	{
-		$countrySpeedSetting = new Settings('country');
-		$this->country  = $countrySpeedSetting->country->getValue();
 	}
 
 	public function buildDataBwGraph()
@@ -192,7 +144,11 @@ class API extends \Piwik\Plugin\API
 		$nameCdn    = $cdnObj->getMainUrl();
 		$nameCdn    = explode("//",$nameCdn)[1];
 
-		$lastMinutes = 5;
+		$qosLastMinuteUpdateSetting = new Settings('QoS');
+		$lastMinutes = $qosLastMinuteUpdateSetting->qosLastMinuteUpdate->getValue();
+		if ( $lastMinutes < 1 ) {
+			$lastMinutes = 5;
+		}
 		$now = time();
 		$before_3mins = $now - ($lastMinutes * 60);
 		$date_param = date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
@@ -499,10 +455,10 @@ class API extends \Piwik\Plugin\API
 				}
 			} elseif( !$columns && $module == 'QoS' && $action == 'mnBandwidth' ) {
 				if ( $isp ){
-					$columns = $this->trafficByIsp[$isp];
+					$columns = $this->traffic[$isp];
 				} else {
 					$columns = array();
-					foreach ($this->trafficByIsp as $metrics) {
+					foreach ($this->traffic as $metrics) {
 						$columns[] = implode(",",$metrics);
 					}
 				}
@@ -745,7 +701,7 @@ class API extends \Piwik\Plugin\API
 		if (!$columns) {
 			$columns = Common::getRequestVar('columns', false);
 			if (!$columns && $module == 'QoS' && $action == 'isp') {
-				$columns = $this->trafficByIsp;
+				$columns = $this->traffic;
 			}
 		}
 
@@ -762,7 +718,7 @@ class API extends \Piwik\Plugin\API
 			$columns = implode(",",$columns);
 		}
 
-		$columns2 = $this->trafficByIsp;
+		$columns2 = $this->traffic;
 		if ( is_array($columns2) ) {
 			if (in_array('isp_traffic_ps_total', $columns2)) {
 				$columns2 = array_diff($columns2, array('isp_traffic_ps_total'));
@@ -1018,109 +974,6 @@ class API extends \Piwik\Plugin\API
 		return $result;
 	}
 
-//	public function getGraphEvolutionBw($idSite, $period, $date, $segment = false, $columns = false)
-//	{
-//		$cdnObj     = new Site($idSite);
-//		$nameCdn    = $cdnObj->getName();
-//
-//		$module = Common::getRequestVar('module', false);
-//		$action = Common::getRequestVar('action', false);
-//
-//		$typePeriod = $this->countStepPeriod($period);
-//		$dates      = explode(",", $date);
-//
-//		$params = array(
-//			'name'      => $nameCdn,
-//			'date'      => ($typePeriod == 'range') ? $date : $dates[1],
-//			'period'    => ($typePeriod == 'range') ? $typePeriod : $this->diffDays($dates[0], $dates[1]) . ' days',
-//			'unit'      => $period,
-//			'type'      => $columns ? $columns : 'traffic_ps'
-//		);
-//
-//		$dataCustomer = $this->apiGetCdnDataMk($params);
-//
-//		/**
-//		 * Make data like
-//		 *
-//		 * array (
-//		 *      "2016-07-17" => array ( "request_count_200" => X, "request_count_500" => Y ),
-//		 *      "2016-07-18" => array ( "request_count_200" => X, "request_count_500" => Y ),
-//		 *      "2016-07-19" => array ( "request_count_200" => X, "request_count_500" => Y )
-//		 * )
-//		 */
-//
-//		$dataCustomer = json_decode($dataCustomer, true);
-//		$graphData = array();
-//
-//		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-//		{
-//			foreach ( $dataCustomer['data'] as $valueOfCdn )
-//			{
-//				// Name of Cdn: $valueOfCdn['name']
-//				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-//				{
-//					// Type request: valueOfTypeRequest['type']
-//					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-//					{
-//						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = $valueByTime['value'];
-//					}
-//				}
-//			}
-//		}
-//		ksort($graphData);
-//
-//		return DataTable::makeFromIndexedArray($graphData);
-//	}
-
-//	public function overviewGetBandwidth( $lastMinutes, $metrics , $refreshAfterXSecs )
-//	{
-//		$idSite     = Common::getRequestVar('idSite', 1);
-//
-//		$cdnObj     = new Site($idSite);
-//		$nameCdn    = $cdnObj->getName();
-//
-//		$now = time();
-//		$before_3mins 	= $now - ($lastMinutes * 60);
-//		$date_param 	= date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
-//		$params = array(
-//			'name'      => $nameCdn,
-//			'date'      => "$date_param",
-//			'period'    => 'range',
-//			'unit'      => 'minute', // range 1 minute
-//			'type'      => $metrics ? $metrics : 'traffic_ps',
-//		);
-//
-//		$dataCustomer = $this->apiGetCdnDataMk($params);
-//		$dataCustomer = json_decode($dataCustomer, true);
-//
-//		$graphData = array();
-//		if ( $dataCustomer['status'] == 'true' && $dataCustomer['data'] )
-//		{
-//			foreach ( $dataCustomer['data'] as $valueOfCdn )
-//			{
-//				// Name of Cdn: $valueOfCdn['name']
-//				foreach ( $valueOfCdn['value'] as $valueOfTypeRequest )
-//				{
-//					// Type request: valueOfTypeRequest['type']
-//					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
-//					{
-//						$graphData[ $valueByTime['name'] ][ $valueOfTypeRequest['type'] ] = (int)$valueByTime['value'];
-//					}
-//				}
-//			}
-//		}
-//
-//		(int)$bandwidth = current(current($graphData));
-//		$formatter 		= new Formatter();
-//
-//		return array(
-//			'bandwidth'        	=> $formatter->getPrettySizeFromBytes( (int)$bandwidth, '', 2 ),
-//			'refreshAfterXSecs' => 5,
-//			'metrics'           => 'traffic_ps',
-//			'lastMinutes'       => $lastMinutes
-//		);
-//	}
-
 	public function overviewGetUserSpeed( $lastMinutes, $metrics , $refreshAfterXSecs )
 	{
 		$idSite     = Common::getRequestVar('idSite', 1);
@@ -1270,11 +1123,10 @@ class API extends \Piwik\Plugin\API
 
 	private function apiGetCdnDataMk( $data )
 	{
-//		$url = 'http://125.212.200.247:8001';
-		$url = 'http://113.164.27.58:8001';
-		$data['path'] = '/api/v1/stat';
+		$ipAddressSetting = new Settings('QoS');
+		$url = $ipAddressSetting->qosApiAddress->getValue();
 
-		$query = $data['path']."?name=".$data['name']."&date=".$data['date']."&period=".$data['period']."&unit=".$data['unit']."&type=".$data['type'];
+		$query = "?name=".$data['name']."&date=".$data['date']."&period=".$data['period']."&unit=".$data['unit']."&type=".$data['type'];
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $this->encodeURI($url.$query));

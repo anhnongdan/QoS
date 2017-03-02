@@ -15,7 +15,7 @@
     "HitByCity" : "Hit by city",
     "TopUrlHit" : "Top Url Hit",
     "HitRatio" : "Hit Ratio",
-    "ratio_hit" : "Hit Ratio",
+    "ratio_hit" : "Hit Ratio Total",
     "HitsVnpt" : "Hits Vnpt",
     "HitsVinaphone" : "Hits Vinaphone",
     "HitsViettel" : "Hits Viettel",
@@ -89,6 +89,13 @@
     "RealTimeCDNThruput":"Real-Time CDN Thru-put",
     "RealTimeAvgDLSpeed":"Real-Time Avg DL Speed",
     "RealTimeMessage": "in the last ",
-    "RealTimeInLastMessage": "%1$s minutes"
+    "RealTimeInLastMessage": "%1$s minutes",
+    "SettingIntro": "QoS plugin settings",
+    "LastMinuteUpdate": "Last Minute Update",
+    "ApiAddress": "API Address",
+    "LastMinuteUpdateDescription": "The last minute for update data",
+    "ApiAddressDescription": "The address API for QoS plugin",
+    "LastMinuteUpdateHelp": "If no change then value is 5 minute",
+    "ApiAddressHelp": "Example: http://domain.com/api/v1/ or http://127.0.0.1:8080/api/v1/"
   }
 }
