@@ -49,7 +49,7 @@ class Settings extends \Piwik\Plugin\Settings
 		$this->qosApiAddress->uiControlType = static::CONTROL_TEXT;
 		$this->qosApiAddress->description     = Piwik::translate('QoS_ApiAddressDescription');
 		$this->qosApiAddress->inlineHelp      = Piwik::translate('QoS_ApiAddressHelp');
-		$this->qosApiAddress->defaultValue    = 'http://113.164.27.58:8001/api/v1/stat';
+		$this->qosApiAddress->defaultValue    = 'http://127.0.0.1:8080/api/v1';
 
 		$this->addSetting($this->qosApiAddress);
 	}
