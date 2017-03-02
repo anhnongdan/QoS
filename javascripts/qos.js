@@ -206,7 +206,7 @@ $(function() {
 			scheduleAnotherRequest();
 			return;
 		}
-		var lastMinutes = $(element).attr('data-last-minutes') || 2;
+		var lastMinutes = $(element).attr('data-last-minutes') || 5;
 		var ajaxRequest = new ajaxHelper();
 		ajaxRequest.addParams({
 			module: 'API',
@@ -260,7 +260,7 @@ $(function() {
             scheduleAnotherRequest();
             return;
         }
-        var lastMinutes = $(element).attr('data-last-minutes') || 2;
+        var lastMinutes = $(element).attr('data-last-minutes') || 5;
         var ajaxRequest = new ajaxHelper();
         ajaxRequest.addParams({
             module: 'API',

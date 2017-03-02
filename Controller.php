@@ -619,7 +619,7 @@ class Controller extends \Piwik\Plugin\Controller
 
 	public function widRealtimeThru() {
 
-		$lastMinutes = 2; // Config variable later
+		$lastMinutes = 5; // Config variable later
 		$lastNData = API::getInstance()->getTraffps($this->idSite, $lastMinutes, 'traffic_ps');
 
 		$view = new View('@QoS/widThruput');
@@ -633,7 +633,7 @@ class Controller extends \Piwik\Plugin\Controller
 
 	public function widRealtimeAvgD() {
 
-		$lastMinutes = 2; // Config variable later
+		$lastMinutes = 5; // Config variable later
 		$lastNData = API::getInstance()->getAvgDl($this->idSite, $lastMinutes, 'avg_speed');
 
 		$view = new View('@QoS/widRealtimeAvgD');

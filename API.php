@@ -192,7 +192,7 @@ class API extends \Piwik\Plugin\API
 		$nameCdn    = $cdnObj->getMainUrl();
 		$nameCdn    = explode("//",$nameCdn)[1];
 
-		$lastMinutes = 2;
+		$lastMinutes = 5;
 		$now = time();
 		$before_3mins = $now - ($lastMinutes * 60);
 		$date_param = date("Y-m-d H:i:s", $before_3mins).",".date("Y-m-d H:i:s", $before_3mins);
