@@ -1,19 +1,19 @@
-# Piwik ExamplePlugin Plugin
+# QoS Plugin
 
 ## Description
 
-Add your plugin description here.
+Quality of Service - for version 3.x
 
 ## FAQ
 
-__My question?__
+__How to install plugin?__
 
-My answer
+Place in plugins directory and active
 
 ## Changelog
 
-Here goes the changelog text.
+3.0.0 
 
 ## Support
 
-Please direct any feedback to ...
+Sao Bac Dau Team (http://sbddigital.com)
