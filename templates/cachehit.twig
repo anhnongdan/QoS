@@ -1,0 +1,24 @@
+<div class="row">
+    {% for m in graphs %}
+		<h2 data-graph-id="QoS.CacheHitGraph">{{ m.title|translate }}</h2>
+
+        {{ m.graph|raw }}
+    {% endfor %}
+
+</div>
+{#<div class="row">#}
+	{#<div class="col-md-6">#}
+		{#<h2>{{ "QoS_TopUrlHit"|translate }}</h2>#}
+		{#{% include "@QoS/_urlReport.twig" %}#}
+		{#<h2>{{ "QoS_HitRatio"|translate }}</h2>#}
+		{#{% include "@QoS/_hitRatioByIsp.twig" %}#}
+	{#</div>#}
+
+	{#<div class="col-md-6">#}
+		{#<h2>{{ "QoS_HitByBrowsers"|translate }}</h2>#}
+		{#{% include "@QoS/_browserReport.twig" %}#}
+
+		{#<h2>{{ 'QoS_HitByCity'|translate }}</h2>#}
+		{#{% include "@QoS/_cityReport.twig" %}#}
+	{#</div>#}
+{#</div>#}

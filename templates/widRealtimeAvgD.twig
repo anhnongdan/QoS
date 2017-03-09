@@ -1,0 +1,36 @@
+<div class='realtime-avg-widget' data-refreshAfterXSecs="{{ refreshAfterXSecs }}" data-last-minutes="{{ lastMinutes }}" >
+	<div class='realtime-avg-counter' title="{{ avg_speed }}">
+		<div>{{ avg_speed }}</div> <span>{{ unit }}bps</span>
+	</div>
+	<br/>
+
+	<div class='simple-realtime-elaboration'>
+        {{ 'QoS_RealTimeMessage'|translate }}
+		<span class="simple-realtime-metric" data-metric="minutes">{{ 'QoS_RealTimeInLastMessage'|translate(lastMinutes) | raw }}</span>
+
+	</div>
+</div>
+<script type="text/javascript">$(document).ready(function () {require('piwik/QoS').initRealtimeAvgWidget();});</script>
+
+{#<div id="realTimeAvgD"></div>#}
+{#<script src="plugins/QoS/javascripts/jquery.jqplot.js"></script>#}
+{#<script src="plugins/QoS/javascripts/jqplot.meterGaugeRenderer.js"></script>#}
+{#<script src="plugins/QoS/javascripts/qosMeterGauge.js"></script>#}
+{#<script type="text/javascript" charset="utf-8">#}
+{#$(document).ready(function() {#}
+	{#$('#realTimeAvgD').gaugeWidget({#}
+        {#intervals: 10,#}
+		{#dataUrlParams: {#}
+			{#module: 'API',#}
+			{#method: 'QoS.getAvgDl',#}
+			{#format: 'json',#}
+			{#lastMinutes: 2,#}
+			{#metric: 'avg_speed'#}
+		{#},#}
+		{#label: 'bps',#}
+		{#unit: 'unit',#}
+		{#valueName:    'avg_val',#}
+		{#maxValueName: 'max_val'#}
+	{#});#}
+{#});#}
+{#</script>#}

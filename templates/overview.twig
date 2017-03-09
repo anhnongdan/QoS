@@ -1,0 +1,37 @@
+<div class="row">
+	{% for m in graphByMetrics %}
+		<h2 data-graph-id="QoS.overviewGraph">{{ m.title|translate }}</h2>
+
+		{{ m.graph|raw }}
+	{% endfor %}
+
+	{#<h2 class="visitsSummaryReportTitle">{{ 'QoS_Report'|translate }}</h2>#}
+	{#{% include "@QoS/_sparklines.twig" %}#}
+
+	{#<div class="col-md-6">#}
+		{#<div class="col-md-12">#}
+			{#{{ graphOverviewBw|raw }}#}
+			{#{% include "@QoS/_overviewBandwidth.twig" %}#}
+		{#</div>#}
+		{#<div class="col-md-12">#}
+			{#{% include "@QoS/_overviewCacheHit.twig" %}#}
+		{#</div>#}
+		{#<div class="col-md-12">#}
+			{#{{ graphIsp|raw }}#}
+		{#</div>#}
+	{#</div>#}
+
+	{#<div class="col-md-6">#}
+		{#<div class="col-md-12">#}
+			{#{% include "@QoS/_overviewSpeed.twig" %}#}
+			{#{% include "@QoS/_overviewUserSpeed.twig" %}#}
+		{#</div>#}
+		{#<div class="col-md-12">#}
+		{#{{ graphHttpCode|raw }}#}
+		{# {% include "@QoS/_overviewHttpCode.twig" %} #}
+		{#</div>#}
+		{#<div class="col-md-12">#}
+		{#{{ graphCountry|raw }}#}
+		{#</div>#}
+	{#</div>#}
+</div>
