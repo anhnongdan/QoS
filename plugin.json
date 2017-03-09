@@ -1,7 +1,7 @@
 {
 	"name": "QoS",
 	"description": "Quality of Service",
-	"version": "1.0.8",
+	"version": "2.0.0",
 	"keywords": ["log", "200", "300", "400", "500"],
 	"homepage": "http://sbddigital.com",
 	"license": "GPL v3+",
