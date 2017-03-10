@@ -17,7 +17,6 @@ class AvgDWidgets extends Widget
     public static function configure(WidgetConfig $config)
     {
         $config->setCategoryId('Live!');
-        $config->setSubcategoryId('QoS_RealTimeAvgDLSpeed');
         $config->setName('QoS_RealTimeAvgDLSpeed');
         $config->setOrder(10);
     }
@@ -26,10 +25,4 @@ class AvgDWidgets extends Widget
     {
         return $this->renderTemplate('widRealtimeAvgD', array('columns' => array('avg_speed')));
     }
-
-//	public function init()
-//	{
-//		$this->addWidget('QoS_RealTimeCDNThruput', 'widRealtimeThru', array('columns' => array('traffic_ps')));
-//		$this->addWidget('QoS_RealTimeAvgDLSpeed', 'widRealtimeAvgD', array('columns' => array('avg_speed')));
-//	}
 }

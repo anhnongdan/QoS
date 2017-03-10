@@ -27,10 +27,4 @@ class ThruputWidgets extends Widget
 
         return $this->renderTemplate('widRealtimeThru', array('columns' => array('traffic_ps')));
     }
-
-//	public function init()
-//	{
-//		$this->addWidget('QoS_RealTimeCDNThruput', 'widRealtimeThru', array('columns' => array('traffic_ps')));
-//		$this->addWidget('QoS_RealTimeAvgDLSpeed', 'widRealtimeAvgD', array('columns' => array('avg_speed')));
-//	}
 }
