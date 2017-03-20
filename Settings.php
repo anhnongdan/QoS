@@ -38,6 +38,7 @@ class Settings extends \Piwik\Plugin\Settings
 		$this->qosLastMinuteUpdate->description     = Piwik::translate('QoS_LastMinuteUpdateDescription');
 		$this->qosLastMinuteUpdate->inlineHelp      = Piwik::translate('QoS_LastMinuteUpdateHelp');
 		$this->qosLastMinuteUpdate->defaultValue    = 5;
+		$this->qosLastMinuteUpdate->readableByCurrentUser = true;
 
 		$this->addSetting($this->qosLastMinuteUpdate);
 	}
@@ -50,6 +51,7 @@ class Settings extends \Piwik\Plugin\Settings
 		$this->qosApiAddress->description     = Piwik::translate('QoS_ApiAddressDescription');
 		$this->qosApiAddress->inlineHelp      = Piwik::translate('QoS_ApiAddressHelp');
 		$this->qosApiAddress->defaultValue    = 'http://127.0.0.1:8080/api/v1';
+		$this->qosApiAddress->readableByCurrentUser    = true;
 
 		$this->addSetting($this->qosApiAddress);
 	}
