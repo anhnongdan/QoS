@@ -82,11 +82,42 @@ class API extends \Piwik\Plugin\API
 		return $this->cacheHit;
 	}
 
+
 	public function buildDataBwGraph()
+	{
+		$rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array());
+
+		$idSite = Common::getRequestVar('idSite', 1);
+                foreach( $rollups as $rollup) {
+                        if($idSite == $rollup['idsite']) {
+                                return $this->buildDataBwGraphFRU($rollup['sourceIdSites']);
+                        }
+                }
+                return $this->buildDataBwGraphFSS($idSite);
+	}		
+
+	protected function buildDataBwGraphFRU($idSites) 
+	{
+		$total = null;
+		foreach($idSites as $idSite) {
+			$dataTable = $this->buildDataBwGraphFSS($idSite);
+			if(!$dataTable->getColumns()) {
+				continue;
+			}
+			if($total === null){
+				$total = $dataTable;
+				continue;
+			}
+			$total->addDataTable($dataTable);
+		}
+		return $total;
+	}
+
+	protected function buildDataBwGraphFSS($idSite)
 	{
 		$columns = array('avg_speed');
 
-		$idSite = Common::getRequestVar('idSite', 1);
+		//$idSite = Common::getRequestVar('idSite', 1);
 		$cdnObj     = new Site($idSite);
 		$nameCdn    = $cdnObj->getMainUrl();
 		$nameCdn    = explode("//",$nameCdn)[1];
@@ -1024,10 +1055,49 @@ class API extends \Piwik\Plugin\API
 		);
 	}
 
+
+
+
+
+	public function getTraffps($idSite, $lastMinutes, $metric) {
+		$rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array(
+                ));
+
+                foreach( $rollups as $rollup) {
+                        if($idSite == $rollup['idsite']) {
+                                $data = $this->getTraffpsForRollup($rollup['sourceIdSites'], $lastMinutes, $metric);
+                        }
+                }
+                if(!$data) {
+                        $data = $this->getTraffpsForSingleSite($idSite, $lastMinutes, $metric);
+                }
+
+                $formatter = new Formatter();
+                $data = $formatter->getPrettySizeFromBytes($data);
+                $split = explode(" ", $data);
+                $graphData['traffic_ps']    = $split[0];
+                $graphData['unit']         = $split[1];
+
+                return $graphData;
+	}
+
+	protected function getTraffpsForRollup($idSites, $lastMinutes, $metric) {
+		$total = 0;
+                foreach($idSites as $idSite) {
+                        $value = $this->getTraffpsForSingleSite($idSite, $lastMinutes, $metric);
+                        if(!$value) {
+                                continue;
+                        }
+                        $total += $value;
+                }
+                return $total;
+	}
+
+
 	/**
 	 * @return mixed
 	 */
-	public function getTraffps($idSite, $lastMinutes, $metric) {
+	protected function getTraffpsForSingleSite($idSite, $lastMinutes, $metric) {
 		$now = date("Y-m-d H:i:s");
 		$time = strtotime($now) - ($lastMinutes * 60);
 		$lastTime = date("Y-m-d H:i:s", $time);
@@ -1062,19 +1132,62 @@ class API extends \Piwik\Plugin\API
 					// Type request: valueOfTypeRequest['type']
 					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
 					{
-						$graphData[ $valueOfTypeRequest['type'] ] = $format->getPrettySizeFromBytes((int)$valueByTime['value']);
+						//$graphData[ $valueOfTypeRequest['type'] ] = $format->getPrettySizeFromBytes((int)$valueByTime['value']);
+						$value = (int)$valueByTime['value'];
 					}
 				}
 			}
 		}
-		$split = explode(" ", $graphData['traffic_ps']);
-		$graphData['traffic_ps']    = $split[0];
-		$graphData['unit']          = $split[1];
+		//$split = explode(" ", $graphData['traffic_ps']);
+		//$graphData['traffic_ps']    = $split[0];
+		//$graphData['unit']          = $split[1];
+
+		//return $graphData;
+		return $value;
+	}
+
+	protected function checkRollUp($idSite) {
+
+	}
+
+	public function getAvgDl($idSite, $lastMinutes, $metric) {
+		$rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array(
+		));
+		
+		foreach( $rollups as $rollup) {
+			if($idSite == $rollup['idsite']) {
+				$data = $this->getAvgDlForRollup($rollup['sourceIdSites'], $lastMinutes, $metric);
+			}
+		}
+		if(!$data) {
+			$data = $this->getAvgDlForSingleSite($idSite, $lastMinutes, $metric);
+		}
+
+		$formatter = new Formatter();
+		$data = $formatter->getPrettySizeFromBytes($data);
+		$split = explode(" ", $data);
+		$graphData['avg_speed']    = $split[0];
+		$graphData['unit']         = $split[1];
 
 		return $graphData;
 	}
 
-	public function getAvgDl($idSite, $lastMinutes, $metric) {
+	protected function getAvgDlForRollup($idSites, $lastMinutes, $metric) {
+		//var_dump($idSites);
+		//$total['avg_speed'] = 0;
+		//$total['unit'] = 'K';
+		$total = 0;
+		foreach($idSites as $idSite) {
+			$value = $this->getAvgDlForSingleSite($idSite, $lastMinutes, $metric);
+			if(!$value) {
+				continue;
+			}		
+			$total += $value;
+		}
+		return $total;
+	}
+
+	protected function getAvgDlForSingleSite($idSite, $lastMinutes, $metric) {
 		$now = date("Y-m-d H:i:s");
 		$time = strtotime($now) - ($lastMinutes * 60);
 		$lastTime = date("Y-m-d H:i:s", $time);
@@ -1109,16 +1222,18 @@ class API extends \Piwik\Plugin\API
 					// Type request: valueOfTypeRequest['type']
 					foreach ( $valueOfTypeRequest['value'] as $valueByTime )
 					{
-						$graphData[ $valueOfTypeRequest['type'] ] = $format->getPrettySizeFromBytes((int)$valueByTime['value']);
+						//$graphData[ $valueOfTypeRequest['type'] ] = $format->getPrettySizeFromBytes((int)$valueByTime['value']);
+						$value = (int)$valueByTime['value'];
 					}
 				}
 			}
 		}
-		$split = explode(" ", $graphData['avg_speed']);
-		$graphData['avg_speed']    = $split[0];
-		$graphData['unit']         = $split[1];
+		//$split = explode(" ", $graphData['avg_speed']);
+		//$graphData['avg_speed']    = $split[0];
+		//$graphData['unit']         = $split[1];
 
-		return $graphData;
+		//return $graphData;
+		return $value;
 	}
 
 	private function apiGetCdnDataMk( $data )
