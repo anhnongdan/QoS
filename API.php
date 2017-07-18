@@ -462,6 +462,10 @@ class API extends \Piwik\Plugin\API
 
 	public function getGraphEvolution($idSite, $date, $period, $columns = false)
 	{
+		if (!\Piwik\Plugin\Manager::getInstance()->isPluginActivated('RollUpReporting')){
+                	return $this->getGraphEvolutionFSS($idSite, $date, $period, $columns);
+		}		
+
                 $rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array());
 
                 $idSite = Common::getRequestVar('idSite', 1);
@@ -478,7 +482,9 @@ class API extends \Piwik\Plugin\API
                 $total = null;
                 foreach($idSites as $idSite) {
                         $dataTable = $this->getGraphEvolutionFSS($idSite, $date, $period, $columns);
-                        if(!$dataTable->getColumns()) {
+                        \Piwik\Log::warning('get columns: '.implode(', ', $dataTable->getColumns()));
+
+			if(!$dataTable->getColumns()) {
                                 continue;
                         }
                         if($total === null){
@@ -486,7 +492,7 @@ class API extends \Piwik\Plugin\API
                                 continue;
                         }
 			// \Piwik\Log::warning(var_dump($dataTable));
-                        //$total->addDataTable($dataTable);
+                        $total->addDataTable($dataTable);
                 }
 		//var_dump($total);
                 return $total;
@@ -599,12 +605,14 @@ class API extends \Piwik\Plugin\API
 					// Type request: valueOfTypeRequest['type']
 					foreach ( $valueOfTypeRequest['value'] as $valueByTime ) {
 						if( $module == 'QoS' && $action == 'overview' && $metric == 'body_bytes_sent') {
-							\Piwik\Log::warning('pretty size for overview BW: ', getPrettySizeFromBytes($valueByTime['value'], 'G'));
-							$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = $format->getPrettySizeFromBytes($valueByTime['value'], 'G');
+							$pV = $format->getPrettySizeFromBytes($valueByTime['value'], 'G');
+							$pV = (float)explode(' ',$pV)[0];
+							$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = $pV;
 							//$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = $valueByTime['value'];
 						} else {
-							$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = $format->getPrettySizeFromBytes($valueByTime['value'], 'M');
-
+							$pV = $format->getPrettySizeFromBytes($valueByTime['value'], 'M');
+							$pV = (float)explode(' ',$pV)[0];
+							$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = $pV;
 							//$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = $valueByTime['value'];
 						}
 					}
@@ -620,17 +628,55 @@ class API extends \Piwik\Plugin\API
 
 	public function getGraphEvolutionCacheHit($idSite, $date, $period, $columns = false)
 	{
-                $rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array());
 
+		if (!\Piwik\Plugin\Manager::getInstance()->isPluginActivated('RollUpReporting')){
+                	$gDT= $this->getGraphEvolutionFSS($idSite, $date, $period, $columns);
+			return $this->filterRatioCacheHit($gDT);
+		}		
+
+                $rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array());
+		
+		$gDT = false;
                 $idSite = Common::getRequestVar('idSite', 1);
                 foreach( $rollups as $rollup) {
                         if($idSite == $rollup['idsite']) {
-                                return $this->getGraphEvolutionCacheHitFRU($rollup['sourceIdSites'], $date, $period, $columns);
+                                $gDT = $this->getGraphEvolutionCacheHitFRU($rollup['sourceIdSites'], $date, $period, $columns);
                         }
                 }
-                return $this->getGraphEvolutionCacheHitFSS($idSite, $date, $period, $columns);
-		
+		if (!$gDT) {
+                	$gDT =  $this->getGraphEvolutionCacheHitFSS($idSite, $date, $period, $columns);
+		}		
+
+		//\Piwik\Log::warning("#782 columns ". implode(', ',$gDT->getColumns()));
+	
+		return $this->filterRatioCacheHit($gDT);
 	}	
+	
+	protected function filterRatioCacheHit($gDT) 
+	{
+		/**
+		*[Thangnt 2017-07-18] Don't be lazy
+		* Process the sum of ratio_hit
+		*/
+		$colArr = array_keys($this->cacheHit[ 'ratio_hit' ]);
+		$gDT->filter(function($table) use ($colArr) {
+			foreach($colArr as $c) {
+				foreach($table->getRows() as $row) {
+					// there's the case when $row doesn't have any column name $c."#requests"
+					if( $row->getColumn($c."#requests") == 0) {
+						$ratio = 0;
+					} else {
+						$ratio = round($row->getColumn($c."#hits")/$row->getColumn($c."#requests"), 2);
+						$ratio = $ratio*100;
+					}
+					$row->addColumn($c, $ratio);
+				}
+				$table->deleteColumn($c."#hits");
+				$table->deleteColumn($c."#requests");
+			}
+		}); 
+		return $gDT;
+	}
 
 	public function getGraphEvolutionCacheHitFRU($idSites, $date, $period, $columns = false)
 	{
@@ -653,15 +699,15 @@ class API extends \Piwik\Plugin\API
 		/**
 		*[Thangnt 2017-07-18] Make a dedicated DataTable filter when needed.
 		*/	
-		if($total->getColumn('ratio_total') !== false) {
-			$sitesN = count($idSites);
-			$total->filter( function($table) use ($sitesN) {
-				foreach($table->getRows() as $row) {
-					$ratio = round($row->getColumn('ratio_total')/$sitesN, 1);
-					$row->setColumn('ratio_total', $ratio);
-				}
-			});
-		} 
+		//if($total->getColumn('ratio_total') !== false) {
+		//	$sitesN = count($idSites);
+		//	$total->filter( function($table) use ($sitesN) {
+		//		foreach($table->getRows() as $row) {
+		//			$ratio = round($row->getColumn('ratio_total')/$sitesN, 1);
+		//			$row->setColumn('ratio_total', $ratio);
+		//		}
+		//	});
+		//} 
 		return $total;
 	}	
 
@@ -759,14 +805,25 @@ class API extends \Piwik\Plugin\API
 					'unit'      => $period,
 					'type'      => $colList
 				);
+
+				// in case of ratio_hit colArr will be 'hit_ratio_total' and hit_ratio for each ISP 
+				// see above, colArr get keys of the cacheHit const Array.
 				$reRatio = $this->comRatioHit($params,$c,explode(",",$colList));
 				
 				$graphData = array_merge_recursive($graphData,$reRatio);
 			}
+			
+			//\Piwik\Log::warning("#774 graphData: \n". json_encode($graphData));
 		}
 		ksort($graphData);
 
-		return DataTable::makeFromIndexedArray($graphData);
+		// For graph to work, this dataTable must has all column required 'ratio_total', 'ratio_isp'
+		//return DataTable::makeFromIndexedArray($graphData);
+		$gDT = DataTable::makeFromIndexedArray($graphData);
+
+		//\Piwik\Log::warning("#782 columns ". implode(', ',$gDT->getColumns()));
+	
+		return $gDT;
 	}
 
 	private function comRatioHit($params, $label, $colArr) {
@@ -796,14 +853,19 @@ class API extends \Piwik\Plugin\API
 			}
 		}
 
+		
 		$arrTmp = array();
 		foreach ($result as $date => $val) {
-			if(($val[ $colArr[1] ] + $val[ $colArr[2] ]) == 0 ) {
-				$arrTmp[ $date ][ $label ] = 0;
-				continue;
-			}
-			$t = round($val[ $colArr[0] ]/( $val[ $colArr[1] ] + $val[ $colArr[2] ] ), 2);
-			$arrTmp[ $date ][ $label ] = $t * 100;
+			$arrTmp[$date][$label.'#requests'] = $val[ $colArr[1] ] + $val[ $colArr[2] ];
+			$arrTmp[$date][$label.'#hits'] = $val[ $colArr[0]];
+			//if(($val[ $colArr[1] ] + $val[ $colArr[2] ]) == 0 ) {
+			//	$arrTmp[ $date ][ $label ] = 0;
+			//	continue;
+			//}
+
+			//hit ratio equals cache_status_HIT/(request200 + request 206)
+			//$t = round($val[ $colArr[0] ]/( $val[ $colArr[1] ] + $val[ $colArr[2] ] ), 2);
+			//$arrTmp[ $date ][ $label ] = $t * 100;
 		}
 		$result = $arrTmp;
 
@@ -812,6 +874,10 @@ class API extends \Piwik\Plugin\API
 
 	public function getGraphEvolutionISP($idSite, $date, $period, $columns = false)
 	{
+		if (!\Piwik\Plugin\Manager::getInstance()->isPluginActivated('RollUpReporting')){
+                	return $this->getGraphEvolutionISPFSS($idSite, $date, $period, $columns);
+		}		
+
                 $rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array());
 
                 $idSite = Common::getRequestVar('idSite', 1);
@@ -908,14 +974,20 @@ class API extends \Piwik\Plugin\API
 
 						if ( strpos($columns, $valueOfTypeRequest['type']) !== false ) {
 							//$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = $format->getPrettySizeFromBytes((int)$valueByTime['value'], "M");
-							$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = (int)$valueByTime['value'];
+							$pV = $format->getPrettySizeFromBytes($valueByTime['value'], 'M');
+							$pV = (float)explode(' ',$pV)[0];
+							$graphData[$valueByTime['name']][$valueOfTypeRequest['type']] = $pV;
 						}
 						if ( isset($graphData[ $valueByTime['name'] ][ 'isp_traffic_ps_total' ]) ) {
 							//$graphData[$valueByTime['name']]['isp_traffic_ps_total'] += $format->getPrettySizeFromBytes((int)$valueByTime['value'], "M");
-							$graphData[$valueByTime['name']]['isp_traffic_ps_total'] += (int)$valueByTime['value'];
+							$pV = $format->getPrettySizeFromBytes($valueByTime['value'], 'M');
+							$pV = (float)explode(' ',$pV)[0];
+							$graphData[$valueByTime['name']]['isp_traffic_ps_total'] += $pV;
 						} else {
 							//$graphData[$valueByTime['name']]['isp_traffic_ps_total'] = $format->getPrettySizeFromBytes((int)$valueByTime['value'], "M");
-							$graphData[$valueByTime['name']]['isp_traffic_ps_total'] = (int)$valueByTime['value'];
+							$pV = $format->getPrettySizeFromBytes($valueByTime['value'], 'M');
+							$pV = (float)explode(' ',$pV)[0];
+							$graphData[$valueByTime['name']]['isp_traffic_ps_total'] = $pV;
 						}
 					}
 				}
@@ -1190,6 +1262,7 @@ class API extends \Piwik\Plugin\API
 
 
 	public function getTraffps($idSite, $lastMinutes, $metric) {
+
 		$rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array(
                 ));
 
