@@ -482,7 +482,7 @@ class API extends \Piwik\Plugin\API
                 $total = null;
                 foreach($idSites as $idSite) {
                         $dataTable = $this->getGraphEvolutionFSS($idSite, $date, $period, $columns);
-                        \Piwik\Log::warning('get columns: '.implode(', ', $dataTable->getColumns()));
+                        //\Piwik\Log::warning('get columns: '.implode(', ', $dataTable->getColumns()));
 
 			if(!$dataTable->getColumns()) {
                                 continue;
@@ -1251,7 +1251,7 @@ class API extends \Piwik\Plugin\API
 
 		return array(
 			'user_speed'        => $formatter->getPrettySizeFromBytes((int)$userSpeed, '', 2),
-			'refreshAfterXSecs' => 5,
+			'refreshAfterXSecs' => 60,
 			'metrics'           => 'avg_speed',
 			'lastMinutes'       => $lastMinutes
 		);
@@ -1262,10 +1262,14 @@ class API extends \Piwik\Plugin\API
 
 
 	public function getTraffps($idSite, $lastMinutes, $metric) {
+		if (!\Piwik\Plugin\Manager::getInstance()->isPluginActivated('RollUpReporting')){
+                        return $this->getTraffpsForSingleSite($idSite, $lastMinutes, $metric);
+                }
 
 		$rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array(
                 ));
 
+		$data = false;
                 foreach( $rollups as $rollup) {
                         if($idSite == $rollup['idsite']) {
                                 $data = $this->getTraffpsForRollup($rollup['sourceIdSites'], $lastMinutes, $metric);
@@ -1354,9 +1358,14 @@ class API extends \Piwik\Plugin\API
 	}
 
 	public function getAvgDl($idSite, $lastMinutes, $metric) {
+		 if (!\Piwik\Plugin\Manager::getInstance()->isPluginActivated('RollUpReporting')){
+                        return $this->getAvgDlForSingleSite($idSite, $lastMinutes, $metric);
+                }	
+	
 		$rollups = \Piwik\API\Request::processRequest('RollUpReporting.getRollUps', array(
 		));
 		
+		$data = false;
 		foreach( $rollups as $rollup) {
 			if($idSite == $rollup['idsite']) {
 				$data = $this->getAvgDlForRollup($rollup['sourceIdSites'], $lastMinutes, $metric);
